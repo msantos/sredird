@@ -1,0 +1,14 @@
+Source: sredird
+Section: comm
+Priority: optional
+Maintainer: Russell Coker <russell@coker.com.au>
+Build-Depends: debhelper (>> 4.0.0)
+Standards-Version: 3.5.8
+
+Package: sredird
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Description: RFC 2217 compliant Telnet serial port redirector
+ Sredird is a serial port redirector that is compliant with the RFC 2217
+ "Telnet Com Port Control Option" protocol. This protocol lets you share a
+ serial port through the network.
