@@ -102,6 +102,7 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -288,7 +289,7 @@ unsigned char GetFromBuffer(BufferType *B);
 
 /* Generic log function with log level control. Uses the same log levels
 of the syslog(3) system call */
-void LogMsg(int LogLevel, const char *const Msg);
+void LogMsg(int LogLevel, const char *const fmt, ...);
 
 /* Function executed when the program exits */
 void ExitFunction(void);
@@ -426,9 +427,15 @@ unsigned char GetFromBuffer(BufferType *B) {
 
 /* Generic log function with log level control. Uses the same log levels
 of the syslog(3) system call */
-void LogMsg(int LogLevel, const char *const Msg) {
-  if (LogLevel <= MaxLogLevel)
-    syslog(LogLevel, "%s", Msg);
+void LogMsg(int LogLevel, const char *const fmt, ...) {
+  va_list ap;
+  if (LogLevel <= MaxLogLevel) {
+    (void)fprintf(stderr, "%s: ", DeviceName);
+    va_start(ap, fmt);
+    (void)vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    (void)fprintf(stderr, "\n");
+  }
 }
 
 /* Function executed when the program exits */
@@ -1150,8 +1157,7 @@ void SendCPCByteCommand(BufferType *B, unsigned char Command,
 /* Handling of COM Port Control specific commands */
 void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
                       size_t CSize) {
-  char LogStr[TmpStrLen];
-  char SigStr[TmpStrLen];
+  char SigStr[TmpStrLen] = {0};
   unsigned long int BaudRate;
   unsigned char DataSize;
   unsigned char Parity;
@@ -1164,17 +1170,14 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
   case TNCAS_SIGNATURE:
     if (CSize == 6) {
       /* Void signature, client is asking for our signature */
-      sprintf(SigStr, "SRedird %s %s", VersionId, DeviceName);
+      (void)snprintf(SigStr, sizeof(SigStr) - 1, "SRedird %s %s", VersionId,
+                     DeviceName);
       SendSignature(SockB, SigStr);
-      sprintf(LogStr, "Sent signature: %s", SigStr);
-      LogMsg(LOG_INFO, LogStr);
+      LogMsg(LOG_INFO, "Sent signature: %s", SigStr);
     } else {
       /* Received client signature */
       strncpy(SigStr, (char *)&Command[4], CSize - 6);
-      snprintf(LogStr, sizeof(LogStr) - 1, "Received client signature: %s",
-               SigStr);
-      LogStr[sizeof(LogStr) - 1] = 0;
-      LogMsg(LOG_INFO, LogStr);
+      LogMsg(LOG_INFO, "Received client signature: %s", SigStr);
     }
     break;
 
@@ -1188,16 +1191,14 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Baud rate notification received.");
     else {
       /* Change the baud rate */
-      sprintf(LogStr, "Port baud rate change to %lu requested.", BaudRate);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port baud rate change to %lu requested.", BaudRate);
       SetPortSpeed(PortFd, BaudRate);
     }
 
     /* Send confirmation */
     BaudRate = GetPortSpeed(PortFd);
     SendBaudRate(SockB, BaudRate);
-    sprintf(LogStr, "Port baud rate: %lu", BaudRate);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Port baud rate: %lu", BaudRate);
     break;
 
   /* Set serial data size */
@@ -1207,17 +1208,15 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Data size notification requested.");
     else {
       /* Set the data size */
-      sprintf(LogStr, "Port data size change to %u requested.",
-              (unsigned int)Command[4]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port data size change to %u requested.",
+             (unsigned int)Command[4]);
       SetPortDataSize(PortFd, Command[4]);
     }
 
     /* Send confirmation */
     DataSize = GetPortDataSize(PortFd);
     SendCPCByteCommand(SockB, TNASC_SET_DATASIZE, DataSize);
-    sprintf(LogStr, "Port data size: %u", (unsigned int)DataSize);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Port data size: %u", (unsigned int)DataSize);
     break;
 
   /* Set the serial parity */
@@ -1227,17 +1226,15 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Parity notification requested.");
     else {
       /* Set the parity */
-      sprintf(LogStr, "Port parity change to %u requested",
-              (unsigned int)Command[4]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port parity change to %u requested",
+             (unsigned int)Command[4]);
       SetPortParity(PortFd, Command[4]);
     }
 
     /* Send confirmation */
     Parity = GetPortParity(PortFd);
     SendCPCByteCommand(SockB, TNASC_SET_PARITY, Parity);
-    sprintf(LogStr, "Port parity: %u", (unsigned int)Parity);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Port parity: %u", (unsigned int)Parity);
     break;
 
   /* Set the serial stop size */
@@ -1247,17 +1244,15 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Stop size notification requested.");
     else {
       /* Set the stop size */
-      sprintf(LogStr, "Port stop size change to %u requested.",
-              (unsigned int)Command[4]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port stop size change to %u requested.",
+             (unsigned int)Command[4]);
       SetPortStopSize(PortFd, Command[4]);
     }
 
     /* Send confirmation */
     StopSize = GetPortStopSize(PortFd);
     SendCPCByteCommand(SockB, TNASC_SET_STOPSIZE, StopSize);
-    sprintf(LogStr, "Port stop size: %u", (unsigned int)StopSize);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Port stop size: %u", (unsigned int)StopSize);
     break;
 
   /* Flow control and DTR/RTS handling */
@@ -1272,8 +1267,7 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Flow control notification requested.");
       FlowControl = GetPortFlowControl(PortFd, Command[4]);
       SendCPCByteCommand(SockB, TNASC_SET_CONTROL, FlowControl);
-      sprintf(LogStr, "Port flow control: %u", (unsigned int)FlowControl);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port flow control: %u", (unsigned int)FlowControl);
       break;
 
     case 5:
@@ -1292,9 +1286,8 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
     default:
       /* Set the flow control */
-      sprintf(LogStr, "Port flow control change to %u requested.",
-              (unsigned int)Command[4]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port flow control change to %u requested.",
+             (unsigned int)Command[4]);
       SetPortFlowControl(PortFd, Command[4]);
 
       /* Flow control status confirmation */
@@ -1308,16 +1301,14 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
         FlowControl = GetPortFlowControl(PortFd, 0);
 
       SendCPCByteCommand(SockB, TNASC_SET_CONTROL, FlowControl);
-      sprintf(LogStr, "Port flow control: %u", (unsigned int)FlowControl);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Port flow control: %u", (unsigned int)FlowControl);
       break;
     }
     break;
 
   /* Set the line state mask */
   case TNCAS_SET_LINESTATE_MASK:
-    sprintf(LogStr, "Line state set to %u", (unsigned int)Command[4]);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Line state set to %u", (unsigned int)Command[4]);
 
     /* Only break notification supported */
     LineStateMask = Command[4] & (unsigned char)16;
@@ -1326,16 +1317,14 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
   /* Set the modem state mask */
   case TNCAS_SET_MODEMSTATE_MASK:
-    sprintf(LogStr, "Modem state mask set to %u", (unsigned int)Command[4]);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Modem state mask set to %u", (unsigned int)Command[4]);
     ModemStateMask = Command[4];
     SendCPCByteCommand(SockB, TNASC_SET_MODEMSTATE_MASK, ModemStateMask);
     break;
 
   /* Port flush requested */
   case TNCAS_PURGE_DATA:
-    sprintf(LogStr, "Port flush %u requested.", (unsigned int)Command[4]);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Port flush %u requested.", (unsigned int)Command[4]);
     switch (Command[4]) {
     /* Inbound flush */
     case 1:
@@ -1368,8 +1357,7 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
   /* Unknown request */
   default:
-    sprintf(LogStr, "Unhandled request %u", (unsigned int)Command[3]);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Unhandled request %u", (unsigned int)Command[3]);
     break;
   }
 }
@@ -1377,8 +1365,6 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 /* Common telnet IAC commands handling */
 void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
                       size_t CSize) {
-  char LogStr[TmpStrLen];
-
   /* Check which command */
   switch (Command[1]) {
   /* Suboptions */
@@ -1393,9 +1379,8 @@ void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       break;
 
     default:
-      sprintf(LogStr, "Unknown suboption received: %u",
-              (unsigned int)Command[2]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Unknown suboption received: %u",
+             (unsigned int)Command[2]);
       break;
     }
     break;
@@ -1439,8 +1424,7 @@ void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
     /* Reject everything else */
     default:
-      sprintf(LogStr, "Rejecting option WILL: %u", (unsigned int)Command[2]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Rejecting option WILL: %u", (unsigned int)Command[2]);
       SendTelnetOption(SockB, TNDONT, Command[2]);
       tnstate[Command[2]].is_do = 0;
       break;
@@ -1487,8 +1471,7 @@ void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
     /* Reject everything else */
     default:
-      sprintf(LogStr, "Rejecting option DO: %u", (unsigned int)Command[2]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Rejecting option DO: %u", (unsigned int)Command[2]);
       SendTelnetOption(SockB, TNWONT, Command[2]);
       tnstate[Command[2]].is_will = 0;
       break;
@@ -1499,9 +1482,8 @@ void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
   /* Notifications of rejections for options */
   case TNDONT:
-    sprintf(LogStr, "Received rejection for option: %u",
-            (unsigned int)Command[2]);
-    LogMsg(LOG_DEBUG, LogStr);
+    LogMsg(LOG_DEBUG, "Received rejection for option: %u",
+           (unsigned int)Command[2]);
     if (tnstate[Command[2]].is_will) {
       SendTelnetOption(SockB, TNWONT, Command[2]);
       tnstate[Command[2]].is_will = 0;
@@ -1515,9 +1497,8 @@ void HandleIACCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_ERR, "Client doesn't support Telnet COM Port "
                       "Protocol Option (RFC 2217), trying to serve anyway.");
     } else {
-      sprintf(LogStr, "Received rejection for option: %u",
-              (unsigned int)Command[2]);
-      LogMsg(LOG_DEBUG, LogStr);
+      LogMsg(LOG_DEBUG, "Received rejection for option: %u",
+             (unsigned int)Command[2]);
     }
     if (tnstate[Command[2]].is_do) {
       SendTelnetOption(SockB, TNDONT, Command[2]);
@@ -1555,8 +1536,7 @@ void Usage(void) {
   LogMsg(LOG_ERR, "sredird: RFC 2217 compliant serial port redirector.");
   LogMsg(LOG_ERR, SRedirdVersionId);
   LogMsg(LOG_ERR, "This program should be run only by the inetd superserver.");
-  LogMsg(LOG_ERR,
-         "Usage: sredird [-i] <loglevel> <device> [pollingterval]");
+  LogMsg(LOG_ERR, "Usage: sredird [-i] <loglevel> <device> [pollingterval]");
   LogMsg(LOG_ERR, "-i indicates Cisco IOS Bug compatibility");
   LogMsg(
       LOG_ERR,
@@ -1573,9 +1553,6 @@ int main(int argc, char *argv[]) {
 
   /* Char read */
   unsigned char C;
-
-  /* Temporary string for logging */
-  char LogStr[TmpStrLen];
 
   /* Actual port settings */
   struct termios PortSettings;
@@ -1669,13 +1646,11 @@ int main(int argc, char *argv[]) {
   LogMsg(LOG_NOTICE, "SRedird started.");
 
   /* Logs sredird log level */
-  sprintf(LogStr, "Log level: %i", MaxLogLevel);
-  LogMsg(LOG_INFO, LogStr);
+  LogMsg(LOG_INFO, "Log level: %i", MaxLogLevel);
 
   /* Logs the polling interval */
-  sprintf(LogStr, "Polling interval (ms): %u",
-          (unsigned int)(BTimeout.tv_usec / 1000));
-  LogMsg(LOG_INFO, LogStr);
+  LogMsg(LOG_INFO, "Polling interval (ms): %u",
+         (unsigned int)(BTimeout.tv_usec / 1000));
 
   /* Register exit and signal handler functions */
   atexit(ExitFunction);
@@ -1692,10 +1667,8 @@ int main(int argc, char *argv[]) {
   if ((DeviceFd = open(DeviceName, O_RDWR | O_NOCTTY | O_NDELAY, 0)) ==
       OpenError) {
     /* Open failed */
-    sprintf(LogStr, "Device in use. Come back later.\r\n");
-    LogMsg(LOG_ERR, LogStr);
-    sprintf(LogStr, "Unable to open device %s. Exiting.", DeviceName);
-    LogMsg(LOG_ERR, LogStr);
+    LogMsg(LOG_ERR, "Device in use. Come back later.\r\n");
+    LogMsg(LOG_ERR, "Unable to open device %s. Exiting.", DeviceName);
     return (Error);
   } else
     DeviceOpened = True;
@@ -1861,9 +1834,8 @@ int main(int argc, char *argv[]) {
         ModemState = GetModemState(DeviceFd, ModemState);
         SendCPCByteCommand(&ToNetBuf, TNASC_NOTIFY_MODEMSTATE,
                            (ModemState & ModemStateMask));
-        sprintf(LogStr, "Sent modem state: %u",
-                (unsigned int)(ModemState & ModemStateMask));
-        LogMsg(LOG_DEBUG, LogStr);
+        LogMsg(LOG_DEBUG, "Sent modem state: %u",
+               (unsigned int)(ModemState & ModemStateMask));
       }
 #ifdef COMMENT
       /* GetLineState() not yet implemented */
@@ -1872,9 +1844,8 @@ int main(int argc, char *argv[]) {
         LineState = GetLineState(DeviceFd, LineState);
         SendCPCByteCommand(&ToNetBuf, TNASC_NOTIFY_LINESTATE,
                            (LineState & LineStateMask));
-        sprintf(LogStr, "Sent line state: %u",
-                (unsigned int)(LineState & LineStateMask));
-        LogMsg(LOG_DEBUG, LogStr);
+        LogMsg(LOG_DEBUG, "Sent line state: %u",
+               (unsigned int)(LineState & LineStateMask));
       }
 #endif /* COMMENT */
     }
