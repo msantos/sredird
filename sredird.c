@@ -117,6 +117,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <err.h>
+
 /* Version id */
 #define VersionId "2.2.1"
 #define SRedirdVersionId "Version " VersionId ", 20 February 2004"
@@ -506,7 +508,8 @@ unsigned long int GetPortSpeed(int PortFd) {
   struct termios PortSettings;
   speed_t Speed;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
   Speed = cfgetospeed(&PortSettings);
 
   switch (Speed) {
@@ -558,7 +561,8 @@ unsigned char GetPortDataSize(int PortFd) {
   struct termios PortSettings;
   tcflag_t DataSize;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgettattr");
   DataSize = PortSettings.c_cflag & CSIZE;
 
   switch (DataSize) {
@@ -579,7 +583,8 @@ unsigned char GetPortDataSize(int PortFd) {
 unsigned char GetPortParity(int PortFd) {
   struct termios PortSettings;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & PARENB) == 0)
     return ((unsigned char)1);
@@ -595,7 +600,8 @@ unsigned char GetPortParity(int PortFd) {
 unsigned char GetPortStopSize(int PortFd) {
   struct termios PortSettings;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & CSTOPB) == 0)
     return ((unsigned char)1);
@@ -610,8 +616,10 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   int MLines;
 
   /* Gets the basic informations from the port */
-  tcgetattr(PortFd, &PortSettings);
-  ioctl(PortFd, TIOCMGET, &MLines);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
+    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
 
   /* Check wich kind of information is requested */
   switch (Which) {
@@ -672,7 +680,8 @@ unsigned char GetModemState(int PortFd, unsigned char PMState) {
   int MLines;
   unsigned char MState = (unsigned char)0;
 
-  ioctl(PortFd, TIOCMGET, &MLines);
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
+    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
 
   if ((MLines & TIOCM_CAR) != 0)
     MState += (unsigned char)128;
@@ -717,17 +726,20 @@ void SetPortDataSize(int PortFd, unsigned char DataSize) {
     break;
   }
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
   PortSettings.c_cflag &= ~CSIZE;
   PortSettings.c_cflag |= PDataSize & CSIZE;
-  tcsetattr(PortFd, TCSADRAIN, &PortSettings);
+  if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcsetattr");
 }
 
 /* Set the serial port parity */
 void SetPortParity(int PortFd, unsigned char Parity) {
   struct termios PortSettings;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
 
   switch (Parity) {
   case 1:
@@ -746,14 +758,16 @@ void SetPortParity(int PortFd, unsigned char Parity) {
     break;
   }
 
-  tcsetattr(PortFd, TCSADRAIN, &PortSettings);
+  if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcsetattr");
 }
 
 /* Set the serial port stop bits size */
 void SetPortStopSize(int PortFd, unsigned char StopSize) {
   struct termios PortSettings;
 
-  tcgetattr(PortFd, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
 
   switch (StopSize) {
   case 1:
@@ -772,7 +786,8 @@ void SetPortStopSize(int PortFd, unsigned char StopSize) {
     break;
   }
 
-  tcsetattr(PortFd, TCSADRAIN, &PortSettings);
+  if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcsetattr");
 }
 
 /* Set the port flow control and DTR and RTS status */
@@ -781,8 +796,10 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
   int MLines;
 
   /* Gets the base status from the port */
-  tcgetattr(PortFd, &PortSettings);
-  ioctl(PortFd, TIOCMGET, &MLines);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
+    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
 
   /* Check which settings to change */
   switch (How) {
@@ -806,7 +823,8 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
     break;
   /* BREAK State ON */
   case 5:
-    tcsendbreak(PortFd, 1);
+    if (tcsendbreak(PortFd, 1) < 0)
+      err(EXIT_FAILURE, "tcsendbreak");
     BreakSignaled = True;
     break;
   /* BREAK State OFF */
@@ -846,8 +864,10 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
     break;
   }
 
-  tcsetattr(PortFd, TCSADRAIN, &PortSettings);
-  ioctl(PortFd, TIOCMSET, &MLines);
+  if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
+      err(EXIT_FAILURE, "tcsetattr");
+  if (ioctl(PortFd, TIOCMSET, &MLines) < 0)
+      err(EXIT_FAILURE, "ioctl(TIOCMSET)");
 }
 
 /* Set the serial port speed */
@@ -919,10 +939,14 @@ void SetPortSpeed(int PortFd, unsigned long BaudRate) {
     break;
   }
 
-  tcgetattr(PortFd, &PortSettings);
-  cfsetospeed(&PortSettings, Speed);
-  cfsetispeed(&PortSettings, Speed);
-  tcsetattr(PortFd, TCSADRAIN, &PortSettings);
+  if (tcgetattr(PortFd, &PortSettings) < 0)
+      err(EXIT_FAILURE, "tcgetattr");
+  if (cfsetospeed(&PortSettings, Speed) < 0)
+      err(EXIT_FAILURE, "cfsetospeed");
+  if (cfsetispeed(&PortSettings, Speed) < 0)
+      err(EXIT_FAILURE, "cfsetispeed");
+  if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
+      err(EXIT_FAILURE, "tcsetattr");
 }
 
 /* Send the signature Sig to the client */
@@ -1272,7 +1296,8 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
 
     case 5:
       /* Break command */
-      tcsendbreak(PortFd, 1);
+      if (tcsendbreak(PortFd, 1) < 0)
+        err(EXIT_FAILURE, "tcsendbreak");
       BreakSignaled = True;
       LogMsg(LOG_DEBUG, "Break Signal ON.");
       SendCPCByteCommand(SockB, TNASC_SET_CONTROL, Command[4]);
@@ -1328,15 +1353,18 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
     switch (Command[4]) {
     /* Inbound flush */
     case 1:
-      tcflush(PortFd, TCIFLUSH);
+      if (tcflush(PortFd, TCIFLUSH) < 0)
+        err(EXIT_FAILURE, "tcflush");
       break;
     /* Outbound flush */
     case 2:
-      tcflush(PortFd, TCOFLUSH);
+      if (tcflush(PortFd, TCOFLUSH) < 0)
+        err(EXIT_FAILURE, "tcflush");
       break;
     /* Inbound/outbound flush */
     case 3:
-      tcflush(PortFd, TCIOFLUSH);
+      if (tcflush(PortFd, TCIOFLUSH) < 0)
+        err(EXIT_FAILURE, "tcflush");
       break;
     }
 
@@ -1674,9 +1702,11 @@ int main(int argc, char *argv[]) {
     DeviceOpened = True;
 
   /* Get the actual port settings */
-  tcgetattr(DeviceFd, &InitialPortSettings);
+  if (tcgetattr(DeviceFd, &InitialPortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
   InitPortRetrieved = True;
-  tcgetattr(DeviceFd, &PortSettings);
+  if (tcgetattr(DeviceFd, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcgetattr");
 
   /* Set the serial port to raw mode */
   cfmakeraw(&PortSettings);
@@ -1688,7 +1718,8 @@ int main(int argc, char *argv[]) {
   PortSettings.c_iflag = (PortSettings.c_iflag & ~IGNBRK) | BRKINT;
 
   /* Write the port settings to device */
-  tcsetattr(DeviceFd, TCSANOW, &PortSettings);
+  if (tcsetattr(DeviceFd, TCSANOW, &PortSettings) < 0)
+    err(EXIT_FAILURE, "tcsetattr");
 
   /* Reset the device fd to blocking mode */
   if (fcntl(DeviceFd, F_SETFL, fcntl(DeviceFd, F_GETFL) & ~(O_NDELAY)) ==
@@ -1714,9 +1745,12 @@ int main(int argc, char *argv[]) {
   setsockopt(STDOUT_FILENO, SOL_IP, IP_TOS, &SockParm, sizeof(SockParm));
 
   /* Make reads/writes unblocking */
-  ioctl(STDOUT_FILENO, FIONBIO, &SockParmEnable);
-  ioctl(STDIN_FILENO, FIONBIO, &SockParmEnable);
-  ioctl(DeviceFd, FIONBIO, &SockParmEnable);
+  if (ioctl(STDOUT_FILENO, FIONBIO, &SockParmEnable) < 0)
+    err(EXIT_FAILURE, "ioctl(FIONBIO)");
+  if (ioctl(STDIN_FILENO, FIONBIO, &SockParmEnable) < 0)
+    err(EXIT_FAILURE, "ioctl(FIONBIO)");
+  if (ioctl(DeviceFd, FIONBIO, &SockParmEnable) < 0)
+    err(EXIT_FAILURE, "ioctl(FIONBIO)");
 
   /* Send initial Telnet negotiations to the client */
   InitTelnetStateMachine();
