@@ -621,7 +621,7 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
     err(EXIT_FAILURE, "ioctl(TIOCMGET)");
 
-  /* Check wich kind of information is requested */
+  /* Check which kind of information is requested */
   switch (Which) {
   /* Com Port Flow Control Setting (outbound/both) */
   case 0:
@@ -865,9 +865,9 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
   }
 
   if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
-      err(EXIT_FAILURE, "tcsetattr");
+    err(EXIT_FAILURE, "tcsetattr");
   if (ioctl(PortFd, TIOCMSET, &MLines) < 0)
-      err(EXIT_FAILURE, "ioctl(TIOCMSET)");
+    err(EXIT_FAILURE, "ioctl(TIOCMSET)");
 }
 
 /* Set the serial port speed */
@@ -940,13 +940,13 @@ void SetPortSpeed(int PortFd, unsigned long BaudRate) {
   }
 
   if (tcgetattr(PortFd, &PortSettings) < 0)
-      err(EXIT_FAILURE, "tcgetattr");
+    err(EXIT_FAILURE, "tcgetattr");
   if (cfsetospeed(&PortSettings, Speed) < 0)
-      err(EXIT_FAILURE, "cfsetospeed");
+    err(EXIT_FAILURE, "cfsetospeed");
   if (cfsetispeed(&PortSettings, Speed) < 0)
-      err(EXIT_FAILURE, "cfsetispeed");
+    err(EXIT_FAILURE, "cfsetispeed");
   if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
-      err(EXIT_FAILURE, "tcsetattr");
+    err(EXIT_FAILURE, "tcsetattr");
 }
 
 /* Send the signature Sig to the client */
@@ -1552,23 +1552,14 @@ void EscWriteBuffer(BufferType *B, unsigned char *Buffer, unsigned int BSize) {
 
 void Usage(void) {
   /* Write little usage information */
-  puts("sredird: RFC 2217 compliant serial port redirector");
-  puts(SRedirdVersionId);
-  puts("This program should be run only by the inetd superserver");
-  puts("Usage: sredird [-i] <loglevel> <device> [pollingterval]");
-  puts("-i indicates Cisco IOS Bug compatibility");
-  puts("Poll interval is in milliseconds, default is 100, "
-       "0 means no polling");
-
-  /* Same on the system log */
-  LogMsg(LOG_ERR, "sredird: RFC 2217 compliant serial port redirector.");
-  LogMsg(LOG_ERR, SRedirdVersionId);
-  LogMsg(LOG_ERR, "This program should be run only by the inetd superserver.");
-  LogMsg(LOG_ERR, "Usage: sredird [-i] <loglevel> <device> [pollingterval]");
-  LogMsg(LOG_ERR, "-i indicates Cisco IOS Bug compatibility");
-  LogMsg(
-      LOG_ERR,
-      "Poll interval is in milliseconds, default is 100, 0 means no polling.");
+  (void)fprintf(
+      stderr,
+      "sredird: RFC 2217 compliant serial port redirector\n"
+      "%s\n"
+      "Usage: sredird [-i] <loglevel> <device> [pollinginterval]\n"
+      "-i indicates Cisco IOS Bug compatibility\n"
+      "Poll interval is in milliseconds, default is 100, 0 means no polling\n",
+      SRedirdVersionId);
 }
 
 /* Main function */
@@ -1620,7 +1611,7 @@ int main(int argc, char *argv[]) {
   openlog("sredird", LOG_PID, LOG_USER);
 
   /* Check the command line argument count */
-  if (argc < 4) {
+  if (argc < 3) {
     Usage();
     return (Error);
   }
