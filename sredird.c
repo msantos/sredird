@@ -1607,6 +1607,8 @@ int main(int argc, char *argv[]) {
   int argi = 1;
   int i;
 
+  int rv;
+
   /* Open the system log */
   openlog("sredird", LOG_PID, LOG_USER);
 
@@ -1773,7 +1775,11 @@ int main(int argc, char *argv[]) {
 
   /* Main loop with fd's control */
   while (True) {
-    if (select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout) > 0) {
+    rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
+    if (rv < 0 && (errno != EAGAIN || errno != EINTR)) {
+      err(EXIT_FAILURE, "select");
+    }
+    if (rv > 0) {
       /* Handle buffers in the following order
        *   Error
        *   Output
