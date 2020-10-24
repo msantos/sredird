@@ -456,9 +456,6 @@ void ExitFunction(void) {
 
   /* Program termination notification */
   LogMsg(LOG_NOTICE, "SRedird stopped.");
-
-  /* Closes the log */
-  closelog();
 }
 
 /* Function called on many signals */
@@ -1608,9 +1605,6 @@ int main(int argc, char *argv[]) {
   int i;
 
   int rv;
-
-  /* Open the system log */
-  openlog("sredird", LOG_PID, LOG_USER);
 
   /* Check the command line argument count */
   if (argc < 3) {
