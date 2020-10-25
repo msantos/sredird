@@ -1787,12 +1787,18 @@ int main(int argc, char *argv[]) {
           int x;
           C = GetFromBuffer(&ToDevBuf);
           x = write(DeviceFd, &C, 1);
-          if (x < 0 && errno == EWOULDBLOCK) {
-            PushToBuffer(&ToDevBuf, C);
-            break;
-          } else if (x < 1) {
-            LogMsg(LOG_NOTICE, "Error writing to device.");
+          if (x == 0) {
+            LogMsg(LOG_INFO, "EOF");
             return (NoError);
+          }
+          if (x < 0) {
+            if (errno == EWOULDBLOCK) {
+              PushToBuffer(&ToDevBuf, C);
+              break;
+            } else {
+              LogMsg(LOG_NOTICE, "Error writing to device.");
+              return (NoError);
+            }
           }
         }
       }
@@ -1803,12 +1809,18 @@ int main(int argc, char *argv[]) {
           int x;
           C = GetFromBuffer(&ToNetBuf);
           x = write(STDOUT_FILENO, &C, 1);
-          if (x < 0 && errno == EWOULDBLOCK) {
-            PushToBuffer(&ToNetBuf, C);
-            break;
-          } else if (x < 1) {
-            LogMsg(LOG_NOTICE, "Error writing to network.");
+          if (x == 0) {
+            LogMsg(LOG_INFO, "EOF");
             return (NoError);
+          }
+          if (x < 0) {
+            if (errno == EWOULDBLOCK) {
+              PushToBuffer(&ToNetBuf, C);
+              break;
+            } else {
+              LogMsg(LOG_NOTICE, "Error writing to network.");
+              return (NoError);
+            }
           }
         }
       }
@@ -1818,11 +1830,17 @@ int main(int argc, char *argv[]) {
         while (!IsBufferFull(&ToNetBuf)) {
           int x;
           x = read(DeviceFd, &C, 1);
-          if (x < 0 && errno == EWOULDBLOCK)
-            break;
-          else if (x < 1) {
-            LogMsg(LOG_NOTICE, "Error reading from device.");
+          if (x == 0) {
+            LogMsg(LOG_INFO, "EOF");
             return (NoError);
+          }
+          if (x < 0) {
+            if (errno == EWOULDBLOCK) {
+              break;
+            } else {
+              LogMsg(LOG_NOTICE, "Error reading from device.");
+              return (NoError);
+            }
           }
           EscWriteChar(&ToNetBuf, C);
         }
@@ -1833,11 +1851,17 @@ int main(int argc, char *argv[]) {
         while (!IsBufferFull(&ToDevBuf)) {
           int x;
           x = read(STDIN_FILENO, &C, 1);
-          if (x < 0 && errno == EWOULDBLOCK) {
-            break;
-          } else if (x < 1) {
-            LogMsg(LOG_NOTICE, "Error reading from network.");
+          if (x == 0) {
+            LogMsg(LOG_INFO, "EOF");
             return (NoError);
+          }
+          if (x < 0) {
+            if (errno == EWOULDBLOCK) {
+              break;
+            } else {
+              LogMsg(LOG_NOTICE, "Error reading from network.");
+              return (NoError);
+            }
           }
           EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
         }
