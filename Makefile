@@ -2,13 +2,18 @@
 # Supplied by Kevin Bertram (kevin@cate.com.au)
 
 CC=gcc
-CFLAGS=-O3 -pipe -fomit-frame-pointer
-WFLAGS=-Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic
+CFLAGS=-O3 -pipe -fomit-frame-pointer \
+	-D_FORTIFY_SOURCE=2 -fstack-protector-strong \
+	-pie -fPIE \
+	-fno-strict-aliasing -fwrapv
+WFLAGS=-Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
+	-Wformat -Werror=format-security
+LDFLAGS += -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
 SRC=sredird.c
 
 sredird:	sredird.c
-	$(CC) $(CFLAGS) $(WFLAGS) -o sredird $(SRC)
+	$(CC) $(CFLAGS) $(WFLAGS) -o sredird $(SRC) $(LDFLAGS)
 
 clean:
 	rm -f sredird
