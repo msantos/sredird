@@ -261,12 +261,12 @@ Boolean InputFlow = True;
 
 /* Telnet State Machine */
 static struct _tnstate {
-  int sent_will : 1;
-  int sent_do : 1;
-  int sent_wont : 1;
-  int sent_dont : 1;
-  int is_will : 1;
-  int is_do : 1;
+  unsigned int sent_will : 1;
+  unsigned int sent_do : 1;
+  unsigned int sent_wont : 1;
+  unsigned int sent_dont : 1;
+  unsigned int is_will : 1;
+  unsigned int is_do : 1;
 } tnstate[256];
 
 /* Function prototypes */
@@ -1597,9 +1597,6 @@ int main(int argc, char *argv[]) {
   /* Generic socket parameter */
   int SockParm;
 
-  /* Out buffer clock ticks limit */
-  clock_t MaxBTicks;
-
   /* Optional argument processing indexes */
   int argi = 1;
   int i;
@@ -1645,16 +1642,13 @@ int main(int argc, char *argv[]) {
   if (argc == argi + 1) {
     BTimeout.tv_sec = 0;
     BTimeout.tv_usec = atol(argv[4]) * 1000;
-    MaxBTicks = (BTimeout.tv_usec * CLOCKS_PER_SEC) / (1000 * 1000);
 
     if (BTimeout.tv_usec <= 0) {
       ETimeout = NULL;
-      MaxBTicks = 0;
     }
   } else {
     BTimeout.tv_sec = 0;
     BTimeout.tv_usec = ModemStatePolling * 1000;
-    MaxBTicks = (BTimeout.tv_usec * CLOCKS_PER_SEC) / (1000 * 1000);
   }
 
   /* Logs sredird start */
