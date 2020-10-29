@@ -119,6 +119,8 @@
 
 #include <err.h>
 
+#include "restrict_process.h"
+
 /* Version id */
 #define VersionId "2.2.1"
 #define SRedirdVersionId "Version " VersionId ", 20 February 2004"
@@ -1603,6 +1605,10 @@ int main(int argc, char *argv[]) {
 
   int rv;
 
+  if (restrict_process_init() < 0) {
+    return (Error);
+  }
+
   /* Check the command line argument count */
   if (argc < 3) {
     Usage();
@@ -1760,6 +1766,10 @@ int main(int argc, char *argv[]) {
   /* Set up timeout for modem status polling */
   if (ETimeout != NULL)
     *ETimeout = BTimeout;
+
+  if (restrict_process_stdio() < 0) {
+    return (Error);
+  }
 
   /* Main loop with fd's control */
   while (True) {
