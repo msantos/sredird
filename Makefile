@@ -1,7 +1,7 @@
 # SRedird base makefile
 # Supplied by Kevin Bertram (kevin@cate.com.au)
 #
-RESTRICT_PROCESS ?= null
+RESTRICT_PROCESS ?= rlimit
 
 CC ?= cc
 CFLAGS ?= -O3 -pipe -fomit-frame-pointer \
@@ -16,7 +16,8 @@ WFLAGS ?= -Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
 LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
 SRC=sredird.c \
-	restrict_process_null.c
+	restrict_process_null.c \
+	restrict_process_rlimit.c
 
 sredird:	sredird.c
 	$(CC) -g $(CFLAGS) $(WFLAGS) -o sredird $(SRC) $(LDFLAGS)
