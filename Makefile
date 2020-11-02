@@ -17,7 +17,8 @@ LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
 SRC=sredird.c \
 	restrict_process_null.c \
-	restrict_process_rlimit.c
+	restrict_process_rlimit.c \
+	restrict_process_seccomp.c
 
 sredird:	sredird.c
 	$(CC) -g $(CFLAGS) $(WFLAGS) -o sredird $(SRC) $(LDFLAGS)
