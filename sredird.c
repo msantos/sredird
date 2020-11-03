@@ -1554,11 +1554,11 @@ void Usage(void) {
   (void)fprintf(
       stderr,
       "sredird: RFC 2217 compliant serial port redirector\n"
-      "%s\n"
+      "%s (using %s mode process restriction)\n"
       "Usage: sredird [-i] <loglevel> <device> [pollinginterval]\n"
       "-i indicates Cisco IOS Bug compatibility\n"
       "Poll interval is in milliseconds, default is 100, 0 means no polling\n",
-      SRedirdVersionId);
+      SRedirdVersionId, RESTRICT_PROCESS);
 }
 
 /* Main function */
