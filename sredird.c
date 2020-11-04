@@ -112,7 +112,6 @@
 #include <sys/times.h>
 #include <sys/types.h>
 #include <syslog.h>
-#include <termio.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -462,10 +461,7 @@ void ExitFunction(void) {
 
 /* Function called on many signals */
 void SignalFunction(int unused) {
-  /* Just to avoid compilation warnings */
-  /* There's no performance penalty in doing this
-  because this function is almost never called */
-  unused = unused;
+  (void)unused;
 
   /* Same as the exit function */
   ExitFunction();
@@ -475,10 +471,7 @@ void SignalFunction(int unused) {
 /* Unimplemented yet */
 void BreakFunction(int unused) {
 #ifndef COMMENT
-  /* Just to avoid compilation warnings */
-  /* There's no performance penalty in doing this
-  because this function is almost never called */
-  unused = unused;
+  (void)unused;
 
   /* Same as the exit function */
   ExitFunction();
