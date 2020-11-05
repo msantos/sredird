@@ -96,6 +96,8 @@
 /* Return NoError, which is 0, on success */
 
 /* Standard library includes */
+#include <sys/types.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -110,7 +112,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/times.h>
-#include <sys/types.h>
 #include <syslog.h>
 #include <termios.h>
 #include <time.h>
@@ -541,8 +542,10 @@ unsigned long int GetPortSpeed(int PortFd) {
     return (115200UL);
   case B230400:
     return (230400UL);
+#ifdef B460800
   case B460800:
     return (460800UL);
+#endif
   default:
     return (0UL);
   }
@@ -922,9 +925,11 @@ void SetPortSpeed(int PortFd, unsigned long BaudRate) {
   case 230400UL:
     Speed = B230400;
     break;
+#ifdef B460800
   case 460800UL:
     Speed = B460800;
     break;
+#endif
   default:
     LogMsg(LOG_WARNING, "Unknwon baud rate requested, setting to 9600.");
     Speed = B9600;
@@ -1717,12 +1722,16 @@ int main(int argc, char *argv[]) {
   SockParm = IPTOS_LOWDELAY;
   setsockopt(STDIN_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParmEnable,
              sizeof(SockParmEnable));
+#ifdef SOL_IP
   setsockopt(STDIN_FILENO, SOL_IP, IP_TOS, &SockParm, sizeof(SockParm));
+#endif
   setsockopt(STDIN_FILENO, SOL_SOCKET, SO_OOBINLINE, &SockParmEnable,
              sizeof(SockParmEnable));
   setsockopt(STDOUT_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParmEnable,
              sizeof(SockParmEnable));
+#ifdef SOL_IP
   setsockopt(STDOUT_FILENO, SOL_IP, IP_TOS, &SockParm, sizeof(SockParm));
+#endif
 
   /* Make reads/writes unblocking */
   if (ioctl(STDOUT_FILENO, FIONBIO, &SockParmEnable) < 0)
