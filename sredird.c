@@ -196,7 +196,7 @@
 typedef enum { False, True } Boolean;
 
 /* Cisco IOS bug compatibility */
-Boolean CiscoIOSCompatible = False;
+static Boolean CiscoIOSCompatible = False;
 
 /* Buffer structure */
 typedef struct {
@@ -209,19 +209,19 @@ typedef struct {
 static char *DeviceName;
 
 /* True when the device has been opened */
-Boolean DeviceOpened = False;
+static Boolean DeviceOpened = False;
 
 /* Device file descriptor */
-int DeviceFd;
+static int DeviceFd;
 
 /* Com Port Control enabled flag */
-Boolean TCPCEnabled = False;
+static Boolean TCPCEnabled = False;
 
 /* True after retrieving the initial settings from the serial port */
-Boolean InitPortRetrieved = False;
+static Boolean InitPortRetrieved = False;
 
 /* Initial serial port settings */
-struct termios InitialPortSettings;
+static struct termios InitialPortSettings;
 
 /* Maximum log level to log in the system log */
 static int MaxLogLevel = LOG_DEBUG + 1;
@@ -256,10 +256,10 @@ static unsigned char LineState = ((unsigned char)0);
 static unsigned char ModemState = ((unsigned char)0);
 
 /* Break state flag */
-Boolean BreakSignaled = False;
+static Boolean BreakSignaled = False;
 
 /* Input flow control flag */
-Boolean InputFlow = True;
+static Boolean InputFlow = True;
 
 /* Telnet State Machine */
 static struct _tnstate {
@@ -280,13 +280,16 @@ void InitTelnetStateMachine(void);
 void InitBuffer(BufferType *B);
 
 /* Check if the buffer is empty */
-Boolean IsBufferEmpty(BufferType *B);
+static Boolean IsBufferEmpty(BufferType *B);
 
 /* Check if the buffer is full */
-Boolean IsBufferFull(BufferType *B);
+static Boolean IsBufferFull(BufferType *B);
 
 /* Add a byte to a buffer */
 void AddToBuffer(BufferType *B, unsigned char C);
+
+/* Push a byte to a buffer */
+void PushToBuffer(BufferType *B, unsigned char C);
 
 /* Get a byte from a buffer */
 unsigned char GetFromBuffer(BufferType *B);
@@ -374,6 +377,9 @@ void HandleIACCommand(BufferType *B, int PortFd, unsigned char *Command,
 
 /* Write a buffer to SockFd with IAC escaping */
 void EscWriteBuffer(BufferType *B, unsigned char *Buffer, unsigned int BSize);
+
+/* Usage */
+void Usage(void);
 
 /* initialize Telnet State Machine */
 void InitTelnetStateMachine(void) {
@@ -658,7 +664,6 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
     if (PortSettings.c_cflag & CRTSCTS)
       return ((unsigned char)16);
     return ((unsigned char)14);
-    break;
 
   default:
     if (PortSettings.c_iflag & IXON)
@@ -666,7 +671,6 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
     if (PortSettings.c_cflag & CRTSCTS)
       return ((unsigned char)3);
     return ((unsigned char)1);
-    break;
   }
 }
 
@@ -1631,7 +1635,6 @@ int main(int argc, char *argv[]) {
       default:
         Usage();
         return (Error);
-        break;
       }
     }
   }
