@@ -16,6 +16,7 @@ WFLAGS ?= -Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
 LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
 SRC=sredird.c \
+	restrict_process_capsicum.c \
 	restrict_process_null.c \
 	restrict_process_pledge.c \
 	restrict_process_rlimit.c \
