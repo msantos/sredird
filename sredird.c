@@ -1793,86 +1793,84 @@ int main(int argc, char *argv[]) {
       if (FD_ISSET(DeviceFd, &OutFdSet)) {
         /* Write to serial port */
         while (!IsBufferEmpty(&ToDevBuf)) {
-          int x;
           C = GetFromBuffer(&ToDevBuf);
-          x = write(DeviceFd, &C, 1);
-          if (x == 0) {
+          switch (write(DeviceFd, &C, 1)) {
+          case 1:
+            continue;
+          case 0:
             LogMsg(LOG_INFO, "EOF");
             return (NoError);
-          }
-          if (x < 0) {
+          case -1:
             if (errno == EWOULDBLOCK) {
               PushToBuffer(&ToDevBuf, C);
-              break;
             } else {
               LogMsg(LOG_NOTICE, "Error writing to device.");
               return (NoError);
             }
           }
+          break;
         }
       }
 
       if (FD_ISSET(STDOUT_FILENO, &OutFdSet)) {
         /* Write to network */
         while (!IsBufferEmpty(&ToNetBuf)) {
-          int x;
           C = GetFromBuffer(&ToNetBuf);
-          x = write(STDOUT_FILENO, &C, 1);
-          if (x == 0) {
+          switch (write(STDOUT_FILENO, &C, 1)) {
+          case 1:
+            continue;
+          case 0:
             LogMsg(LOG_INFO, "EOF");
             return (NoError);
-          }
-          if (x < 0) {
+          case -1:
             if (errno == EWOULDBLOCK) {
               PushToBuffer(&ToNetBuf, C);
-              break;
             } else {
               LogMsg(LOG_NOTICE, "Error writing to network.");
               return (NoError);
             }
           }
+          break;
         }
       }
 
       if (FD_ISSET(DeviceFd, &InFdSet)) {
         /* Read from serial port */
         while (!IsBufferFull(&ToNetBuf)) {
-          int x;
-          x = read(DeviceFd, &C, 1);
-          if (x == 0) {
+          switch (read(DeviceFd, &C, 1)) {
+          case 1:
+            EscWriteChar(&ToNetBuf, C);
+            continue;
+          case 0:
             LogMsg(LOG_INFO, "EOF");
             return (NoError);
-          }
-          if (x < 0) {
-            if (errno == EWOULDBLOCK) {
-              break;
-            } else {
+          case -1:
+            if (errno != EWOULDBLOCK) {
               LogMsg(LOG_NOTICE, "Error reading from device.");
               return (NoError);
             }
           }
-          EscWriteChar(&ToNetBuf, C);
+          break;
         }
       }
 
       if (FD_ISSET(STDIN_FILENO, &InFdSet)) {
         /* Read from network */
         while (!IsBufferFull(&ToDevBuf)) {
-          int x;
-          x = read(STDIN_FILENO, &C, 1);
-          if (x == 0) {
+          switch (read(STDIN_FILENO, &C, 1)) {
+          case 1:
+            EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
+            continue;
+          case 0:
             LogMsg(LOG_INFO, "EOF");
             return (NoError);
-          }
-          if (x < 0) {
-            if (errno == EWOULDBLOCK) {
-              break;
-            } else {
+          case -1:
+            if (errno != EWOULDBLOCK) {
               LogMsg(LOG_NOTICE, "Error reading from network.");
               return (NoError);
             }
           }
-          EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
+          break;
         }
       }
 
