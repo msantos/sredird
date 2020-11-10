@@ -1779,7 +1779,7 @@ int main(int argc, char *argv[]) {
   /* Main loop with fd's control */
   while (True) {
     rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
-    if (rv < 0 && (errno != EAGAIN || errno != EINTR)) {
+    if (rv < 0 && (errno != EAGAIN && errno != EINTR)) {
       err(EXIT_FAILURE, "select");
     }
     if (rv > 0) {
