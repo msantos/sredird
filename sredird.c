@@ -206,7 +206,7 @@ typedef struct {
 } BufferType;
 
 /* Complete device file pathname */
-static char *DeviceName;
+static const char *DeviceName;
 
 /* True when the device has been opened */
 static Boolean DeviceOpened = False;
@@ -1559,6 +1559,7 @@ void Usage(void) {
       "%s (using %s mode process restriction)\n"
       "Usage: sredird [-i] <loglevel> <device> [pollinginterval]\n"
       "-i indicates Cisco IOS Bug compatibility\n"
+      "-t <seconds> set inactivity timeout\n"
       "Poll interval is in milliseconds, default is 100, 0 means no polling\n",
       SRedirdVersionId, RESTRICT_PROCESS);
 }
@@ -1606,10 +1607,13 @@ int main(int argc, char *argv[]) {
   int i;
 
   int rv;
+  unsigned int idle_timeout = 0;
 
   if (restrict_process_init() < 0) {
     return (Error);
   }
+
+  DeviceName = "nodev";
 
   /* Check the command line argument count */
   if (argc < 3) {
@@ -1631,12 +1635,23 @@ int main(int argc, char *argv[]) {
         } else
           CiscoIOSCompatible = True;
         break;
-
+      case 't':
+        idle_timeout = atoi(argv[++argi]);
+        goto EARGV;
+        break;
       default:
         Usage();
         return (Error);
       }
     }
+  EARGV:
+    continue;
+  }
+
+  /* Check the command line argument count */
+  if (argc - argi < 2) {
+    Usage();
+    return (Error);
   }
 
   /* Sets the log level */
@@ -1675,9 +1690,13 @@ int main(int argc, char *argv[]) {
   signal(SIGABRT, SignalFunction);
   signal(SIGPIPE, SignalFunction);
   signal(SIGTERM, SignalFunction);
+  signal(SIGALRM, SignalFunction);
 
   /* Register the function to be called on break condition */
   signal(SIGINT, BreakFunction);
+
+  if (idle_timeout > 0)
+    alarm(idle_timeout);
 
   /* Open the device */
   if ((DeviceFd = open(DeviceName, O_RDWR | O_NOCTTY | O_NDELAY, 0)) ==
@@ -1796,6 +1815,8 @@ int main(int argc, char *argv[]) {
           C = GetFromBuffer(&ToDevBuf);
           switch (write(DeviceFd, &C, 1)) {
           case 1:
+            if (idle_timeout > 0)
+              alarm(idle_timeout);
             continue;
           case 0:
             LogMsg(LOG_INFO, "EOF");
@@ -1818,6 +1839,8 @@ int main(int argc, char *argv[]) {
           C = GetFromBuffer(&ToNetBuf);
           switch (write(STDOUT_FILENO, &C, 1)) {
           case 1:
+            if (idle_timeout > 0)
+              alarm(idle_timeout);
             continue;
           case 0:
             LogMsg(LOG_INFO, "EOF");
@@ -1840,6 +1863,8 @@ int main(int argc, char *argv[]) {
           switch (read(DeviceFd, &C, 1)) {
           case 1:
             EscWriteChar(&ToNetBuf, C);
+            if (idle_timeout > 0)
+              alarm(idle_timeout);
             continue;
           case 0:
             LogMsg(LOG_INFO, "EOF");
@@ -1860,6 +1885,8 @@ int main(int argc, char *argv[]) {
           switch (read(STDIN_FILENO, &C, 1)) {
           case 1:
             EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
+            if (idle_timeout > 0)
+              alarm(idle_timeout);
             continue;
           case 0:
             LogMsg(LOG_INFO, "EOF");
