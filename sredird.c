@@ -464,6 +464,8 @@ void ExitFunction(void) {
 
   /* Program termination notification */
   LogMsg(LOG_NOTICE, "SRedird stopped.");
+
+  _exit(0);
 }
 
 /* Function called on many signals */
