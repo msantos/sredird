@@ -1,6 +1,15 @@
 # SRedird base makefile
 # Supplied by Kevin Bertram (kevin@cate.com.au)
 #
+UNAME_SYS := $(shell uname -s)
+ifeq ($(UNAME_SYS), Linux)
+    RESTRICT_PROCESS ?= seccomp
+else ifeq ($(UNAME_SYS), OpenBSD)
+    RESTRICT_PROCESS ?= pledge
+else ifeq ($(UNAME_SYS), FreeBSD)
+    RESTRICT_PROCESS ?= capsicum
+endif
+
 RESTRICT_PROCESS ?= rlimit
 
 CC ?= cc
