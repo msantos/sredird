@@ -1191,7 +1191,7 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
   unsigned char StopSize;
   unsigned char FlowControl;
 
-  /* Check wich command has been requested */
+  /* Check which command has been requested */
   switch (Command[3]) {
   /* Signature */
   case TNCAS_SIGNATURE:

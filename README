@@ -84,7 +84,7 @@ The optional parameters are:
 
 - At the beginning of the command line:
 
-A -i option enables compatibility with the Cisco IOS wich has a small
+A -i option enables compatibility with the Cisco IOS which has a small
 bug in the handling of the inbound flow control.
 
 - At the end of the command line:
