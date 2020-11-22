@@ -98,6 +98,7 @@
 /* Standard library includes */
 #include <sys/types.h>
 
+#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -116,8 +117,6 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-
-#include <err.h>
 
 #include "restrict_process.h"
 
@@ -937,7 +936,7 @@ void SetPortSpeed(int PortFd, unsigned long BaudRate) {
     break;
 #endif
   default:
-    LogMsg(LOG_WARNING, "Unknwon baud rate requested, setting to 9600.");
+    LogMsg(LOG_WARNING, "Unknown baud rate requested, setting to 9600.");
     Speed = B9600;
     break;
   }
@@ -1798,7 +1797,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Main loop with fd's control */
-  while (True) {
+  for (;;) {
     rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
     if (rv < 0 && (errno != EAGAIN && errno != EINTR)) {
       err(EXIT_FAILURE, "select");
