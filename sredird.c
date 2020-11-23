@@ -101,6 +101,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -379,6 +380,12 @@ void EscWriteBuffer(BufferType *B, unsigned char *Buffer, unsigned int BSize);
 
 /* Usage */
 void Usage(void);
+
+static const struct option long_options[] = {
+    {"timeout", required_argument, NULL, 't'},
+    {"cisco-compatibility", no_argument, NULL, 'i'},
+    {"help", no_argument, NULL, 'h'},
+    {NULL, 0, NULL, 0}};
 
 /* initialize Telnet State Machine */
 void InitTelnetStateMachine(void) {
@@ -1558,9 +1565,9 @@ void Usage(void) {
       stderr,
       "sredird: RFC 2217 compliant serial port redirector\n"
       "%s (using %s mode process restriction)\n"
-      "Usage: sredird [-i] <loglevel> <device> [pollinginterval]\n"
-      "-i indicates Cisco IOS Bug compatibility\n"
-      "-t <seconds> set inactivity timeout\n"
+      "Usage: sredird [<option>] <loglevel> <device> [pollinginterval]\n"
+      "-i, --cisco-compatibility  indicates Cisco IOS Bug compatibility\n"
+      "-t, --timeout <seconds>    set inactivity timeout\n"
       "Poll interval is in milliseconds, default is 100, 0 means no polling\n",
       SRedirdVersionId, RESTRICT_PROCESS);
 }
@@ -1604,8 +1611,7 @@ int main(int argc, char *argv[]) {
   int SockParm;
 
   /* Optional argument processing indexes */
-  int argi = 1;
-  int i;
+  int ch;
 
   int rv;
   unsigned int idle_timeout = 0;
@@ -1616,55 +1622,44 @@ int main(int argc, char *argv[]) {
 
   DeviceName = "nodev";
 
-  /* Check the command line argument count */
-  if (argc < 3) {
-    Usage();
-    return (Error);
-  }
-
-  /* Process optional switch arguments */
-  for (argi = 1; argv[argi][0] == '-' && argi < argc; argi++) {
-    i = 1;
-    while (argv[argi][i]) {
-      switch (argv[argi][i++]) {
-      /* Cisco IOS compatibility */
-      case 'i':
-        if (CiscoIOSCompatible) {
-          /* Already set */
-          Usage();
-          return (Error);
-        } else
-          CiscoIOSCompatible = True;
-        break;
-      case 't':
-        idle_timeout = atoi(argv[++argi]);
-        goto EARGV;
-        break;
-      default:
+  while ((ch = getopt_long(argc, argv, "iht:", long_options, NULL)) != -1) {
+    switch (ch) {
+    case 'i':
+      if (CiscoIOSCompatible) {
         Usage();
         return (Error);
       }
+      CiscoIOSCompatible = True;
+      break;
+    case 't':
+      idle_timeout = atoi(optarg);
+      break;
+    case 'h':
+    default:
+      Usage();
+      return (Error);
     }
-  EARGV:
-    continue;
   }
 
+  argc -= optind;
+  argv += optind;
+
   /* Check the command line argument count */
-  if (argc - argi < 2) {
+  if (argc < 2) {
     Usage();
     return (Error);
   }
 
   /* Sets the log level */
-  MaxLogLevel = atoi(argv[argi++]);
+  MaxLogLevel = atoi(argv[0]);
 
   /* Gets device file name */
-  DeviceName = argv[argi++];
+  DeviceName = argv[1];
 
   /* Retrieve the polling interval */
-  if (argc == argi + 1) {
+  if (argc > 2) {
     BTimeout.tv_sec = 0;
-    BTimeout.tv_usec = atol(argv[4]) * 1000;
+    BTimeout.tv_usec = atol(argv[2]) * 1000;
 
     if (BTimeout.tv_usec <= 0) {
       ETimeout = NULL;
