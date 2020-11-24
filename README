@@ -75,11 +75,6 @@ for further information on the syslog facility and log levels.
 
 Device: the device complete path. Something like /dev/ttyS0 or /dev/modem.
 
-Lock file: the file to use for inter-application locking. This must
-match the one used by other applications, usually something like
-/var/lock/LCK..ttyS0 or /var/lock/LCK..modem for the devices considered
-above. Sredird supports only HDB style (i.e. ASCII) file locking.
-
 The optional parameters are:
 
 - At the beginning of the command line:
@@ -105,7 +100,7 @@ Put the executable in a suitable directory (/usr/sbin or /usr/local/sbin).
 Sredird is designed to run under inetd control. The line in the inetd
 configuration file (usually /etc/inetd.conf) should look like this:
 
-sredir          stream  tcp     nowait  root    /usr/sbin/tcpd /usr/sbin/sredird -i 5 /dev/modem /var/lock/LCK..modem
+sredir          stream  tcp     nowait  root    /usr/sbin/tcpd /usr/sbin/sredird -i 5 /dev/modem
 
 Of course, "sredir" should be defined in the services file (usually
 /etc/services, usual values start at port 7000) and "/dev/modem" should

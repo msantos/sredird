@@ -208,11 +208,8 @@ typedef struct {
 /* Complete device file pathname */
 static const char *DeviceName;
 
-/* True when the device has been opened */
-static Boolean DeviceOpened = False;
-
 /* Device file descriptor */
-static int DeviceFd;
+static int DeviceFd = -1;
 
 /* Com Port Control enabled flag */
 static Boolean TCPCEnabled = False;
@@ -457,12 +454,13 @@ void LogMsg(int LogLevel, const char *const fmt, ...) {
 /* Function executed when the program exits */
 void ExitFunction(void) {
   /* Restores initial port settings */
-  if (InitPortRetrieved == True)
-    tcsetattr(DeviceFd, TCSANOW, &InitialPortSettings);
+  if (DeviceFd > -1) {
+    if (InitPortRetrieved == True)
+      tcsetattr(DeviceFd, TCSANOW, &InitialPortSettings);
 
-  /* Closes the device */
-  if (DeviceOpened == True)
+    /* Closes the device */
     close(DeviceFd);
+  }
 
   /* Closes the sockets */
   close(STDIN_FILENO);
@@ -1698,11 +1696,9 @@ int main(int argc, char *argv[]) {
   if ((DeviceFd = open(DeviceName, O_RDWR | O_NOCTTY | O_NDELAY, 0)) ==
       OpenError) {
     /* Open failed */
-    LogMsg(LOG_ERR, "Device in use. Come back later.\r\n");
     LogMsg(LOG_ERR, "Unable to open device %s. Exiting.", DeviceName);
     return (Error);
-  } else
-    DeviceOpened = True;
+  }
 
   /* Get the actual port settings */
   if (tcgetattr(DeviceFd, &InitialPortSettings) < 0)
