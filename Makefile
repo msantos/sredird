@@ -24,6 +24,7 @@ WFLAGS ?= -Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
 	-Wformat -Werror=format-security
 LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
+PROG= sredird
 SRC=sredird.c \
 	restrict_process_capsicum.c \
 	restrict_process_null.c \
@@ -31,7 +32,8 @@ SRC=sredird.c \
 	restrict_process_rlimit.c \
 	restrict_process_seccomp.c
 
-sredird:	sredird.c
+all: $(PROG)
+$(PROG):
 	$(CC) -g $(CFLAGS) $(WFLAGS) -o sredird $(SRC) $(LDFLAGS)
 
 clean:
