@@ -4,6 +4,7 @@
     Copyright (C) 1999 - 2003 InfoTecna s.r.l.
     Copyright (C) 2001, 2002 Trustees of Columbia University
     in the City of New York
+    Copyright (C) 2020 Michael Santos <michael.santos@gmail.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,79 +19,6 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-    To contact the authors:
-
-      Denis Sbragion
-      InfoTecna
-      Tel, Fax: +39 0362 805396
-      URL: http://www.infotecna.it
-      E-Mail: d.sbragion@infotecna.it
-
-      Jeffrey Altman
-      The Kermit Project
-      Columbia University
-      URL: http://www.kermit-project.org/
-      E-mail: jaltman@columbia.edu
-
-    Current design issues:
-
-      . does not properly check implement BREAK handling. Need to figure
-        out how to turn a BREAK on and then off based upon receipt of
-        COM-PORT Subnegotiations
-
-      . does not properly use select to handle input, output and
-        errors on all devices.
-
-      . Lack of login processing
-
-      . Lack of Telnet START_TLS to protect the data stream
-
-      . Lack of Telnet AUTHENTICATION
-
-      . LineState processing is not implemented
-
-      . The code probably won't compile on most versions of Unix due to the
-        highly platform dependent nature of the serial apis.
-
-    Fixed in 2.0.0:
-
-      . Telnet DO ECHO should not be refused.  The modem handles the echoing
-        if necessary.
-
-      . Cisco IOS returns 0 to the client when INBOUND flow control is SET but
-        not supported seperately from OUTBOUND.
-
-      . Track the state of the telnet negotiations
-
-      . Add support for BINARY mode translations
-
-   Fixed in 2.1.0:
-
-      . GetPortFlowControl should return 1 to indicate NO FLOW CONTROL
-        instead of 0.
-
-      . The Cisco IOS hack should become activated only if set by command-
-        line option [-i].
-
-      . Changed the order of checks in the EscWriteChar function for slightly
-        better performance
-
-   Fixed in 2.2.0:
-
-      Mario Viara
-
-      Email: mario@viara.info
-
-      . Fixed set port data size now work with 5 6 7 8 bits.
-      . Add version in get signature.
-
-      Russell Coker <russell@coker.com.au>
-
-      . Many minor changes and code cleanup
-
-      For other important changes from Russell Coker see the README file.
-
 */
 
 /* Return NoError, which is 0, on success */

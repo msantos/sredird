@@ -4,7 +4,7 @@ sredird \- RFC 2217 serial port server
 
 .SH "SYNOPSIS"
 .B sredird
-.I [\-i] log\-level serial\-device lock\-file [poll\-interval]
+.I [\-i] [\-t timeout] log\-level serial\-device [poll\-interval]
 
 .SH "DESCRIPTION"
 This manual page documents briefly the
@@ -17,20 +17,17 @@ will use the RFC 2217 extensions to TELNET to implement serial commands over
 the TCP connection and interface to a specified serial port.
 
 .SH "OPTIONS"
-An optional first parameter is '\-i' to enable compatability with Cisco IOS.
+Use '\-i' to enable compatability with Cisco IOS.
+
+Use '\-t timeout' to enable a session timeout in seconds.
 
 The first mandatory parameter is the log level for use in syslog.  The next
 mandatory parameter is the device node for the serial device, it must be a
-fully qualified path.  The final mandatory parameter is the file name for the
-lock file to be used to prevent multiple instances of
-.I sredird
-from talking to the serial port at the same time, or to allow sharing a port
-between modem and
-.I sredird.
+fully qualified path.
 
 .SH "EXAMPLE"
 Here is a configuration line for running it from inetd:
-sredir          stream  tcp     nowait  root    /usr/sbin/tcpd /usr/sbin/sredird 5 /dev/modem /var/lock/LCK..modem
+sredir          stream  tcp     nowait  root    /usr/sbin/tcpd /usr/sbin/sredird 5 /dev/modem
 
 .SH "AUTHOR"
 This man page was written by Russell Coker <russell@coker.com.au>.  May be
