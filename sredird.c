@@ -1606,16 +1606,24 @@ int main(int argc, char *argv[]) {
          (unsigned int)(BTimeout.tv_usec / 1000));
 
   /* Register exit and signal handler functions */
-  atexit(ExitFunction);
-  signal(SIGHUP, SignalFunction);
-  signal(SIGQUIT, SignalFunction);
-  signal(SIGABRT, SignalFunction);
-  signal(SIGPIPE, SignalFunction);
-  signal(SIGTERM, SignalFunction);
-  signal(SIGALRM, SignalFunction);
+  if (atexit(ExitFunction) != 0)
+    return (Error);
+  if (signal(SIGHUP, SignalFunction) == SIG_ERR)
+    return (Error);
+  if (signal(SIGQUIT, SignalFunction) == SIG_ERR)
+    return (Error);
+  if (signal(SIGABRT, SignalFunction) == SIG_ERR)
+    return (Error);
+  if (signal(SIGPIPE, SignalFunction) == SIG_ERR)
+    return (Error);
+  if (signal(SIGTERM, SignalFunction) == SIG_ERR)
+    return (Error);
+  if (signal(SIGALRM, SignalFunction) == SIG_ERR)
+    return (Error);
 
   /* Register the function to be called on break condition */
-  signal(SIGINT, BreakFunction);
+  if (signal(SIGINT, BreakFunction) == SIG_ERR)
+    return (Error);
 
   if (idle_timeout > 0)
     alarm(idle_timeout);
