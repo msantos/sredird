@@ -1542,6 +1542,8 @@ int main(int argc, char *argv[]) {
   int rv;
   unsigned int idle_timeout = 0;
 
+  struct sigaction act = {0};
+
   if (restrict_process_init() < 0) {
     return (Error);
   }
@@ -1608,21 +1610,26 @@ int main(int argc, char *argv[]) {
   /* Register exit and signal handler functions */
   if (atexit(ExitFunction) != 0)
     return (Error);
-  if (signal(SIGHUP, SignalFunction) == SIG_ERR)
+
+  act.sa_handler = SignalFunction;
+  (void)sigfillset(&act.sa_mask);
+
+  if (sigaction(SIGHUP, &act, NULL) != 0)
     return (Error);
-  if (signal(SIGQUIT, SignalFunction) == SIG_ERR)
+  if (sigaction(SIGQUIT, &act, NULL) != 0)
     return (Error);
-  if (signal(SIGABRT, SignalFunction) == SIG_ERR)
+  if (sigaction(SIGABRT, &act, NULL) != 0)
     return (Error);
-  if (signal(SIGPIPE, SignalFunction) == SIG_ERR)
+  if (sigaction(SIGPIPE, &act, NULL) != 0)
     return (Error);
-  if (signal(SIGTERM, SignalFunction) == SIG_ERR)
+  if (sigaction(SIGTERM, &act, NULL) != 0)
     return (Error);
-  if (signal(SIGALRM, SignalFunction) == SIG_ERR)
+  if (sigaction(SIGALRM, &act, NULL) != 0)
     return (Error);
 
   /* Register the function to be called on break condition */
-  if (signal(SIGINT, BreakFunction) == SIG_ERR)
+  act.sa_handler = BreakFunction;
+  if (sigaction(SIGINT, &act, NULL) != 0)
     return (Error);
 
   if (idle_timeout > 0)
