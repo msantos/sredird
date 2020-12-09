@@ -18,7 +18,8 @@ CFLAGS ?= -O3 -pipe -fomit-frame-pointer \
 	-pie -fPIE \
 	-fno-strict-aliasing -fwrapv \
 	-DRESTRICT_PROCESS=\"$(RESTRICT_PROCESS)\" \
-	-DRESTRICT_PROCESS_$(RESTRICT_PROCESS)
+	-DRESTRICT_PROCESS_$(RESTRICT_PROCESS) \
+	$(SREDIRD_CFLAGS)
 
 WFLAGS ?= -Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
 	-Wformat -Werror=format-security
