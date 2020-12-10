@@ -93,6 +93,9 @@ int restrict_process_init() {
 #ifdef __NR_openat
       SC_ALLOW(openat),
 #endif
+#ifdef __NR_rt_sigprocmask
+      SC_ALLOW(rt_sigprocmask),
+#endif
 #ifdef __NR_rt_sigaction
       SC_ALLOW(rt_sigaction),
 #endif
@@ -182,6 +185,9 @@ int restrict_process_stdio() {
 
 #ifdef __NR_close
       SC_ALLOW(close),
+#endif
+#ifdef __NR_rt_sigprocmask
+      SC_ALLOW(rt_sigprocmask),
 #endif
 #ifdef __NR_rt_sigaction
       SC_ALLOW(rt_sigaction),
