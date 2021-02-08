@@ -381,6 +381,8 @@ void LogMsg(int LogLevel, const char *const fmt, ...) {
 
 /* Function executed when the program exits */
 void ExitFunction(void) {
+  const char *message = "SRedird stopped.\n";
+
   /* Restores initial port settings */
   if (DeviceFd > -1) {
     if (InitPortRetrieved == True)
@@ -395,7 +397,11 @@ void ExitFunction(void) {
   close(STDOUT_FILENO);
 
   /* Program termination notification */
-  LogMsg(LOG_NOTICE, "SRedird stopped.");
+  if (MaxLogLevel >= LOG_NOTICE)
+    /* warning: ignoring return value of ‘write’, declared with attribute
+     * warn_unused_result [-Wunused-result] */
+    if (write(STDERR_FILENO, message, strlen(message)) == -1) {
+    }
 
   _exit(0);
 }
