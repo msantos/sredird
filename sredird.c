@@ -1139,7 +1139,7 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
                      DeviceName);
       SendSignature(SockB, SigStr);
       LogMsg(LOG_INFO, "Sent signature: %s", SigStr);
-    } else {
+    } else if (CSize > 6 && CSize < (sizeof(SigStr) - 1)) {
       /* Received client signature */
       strncpy(SigStr, (char *)&Command[4], CSize - 6);
       LogMsg(LOG_INFO, "Received client signature: %s", SigStr);
