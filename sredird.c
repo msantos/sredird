@@ -1728,126 +1728,131 @@ int main(int argc, char *argv[]) {
   FD_ZERO(&OutFdSet);
   FD_SET(STDOUT_FILENO, &OutFdSet);
 
-  /* Set up timeout for modem status polling */
-  if (ETimeout != NULL)
-    *ETimeout = BTimeout;
-
   if (restrict_process_stdio() < 0) {
     return (Error);
   }
 
   /* Main loop with fd's control */
   for (;;) {
+    /* Set up timeout for modem status polling */
+    if (ETimeout != NULL)
+      *ETimeout = BTimeout;
+
     rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
-    if (rv < 0 && (errno != EAGAIN && errno != EINTR)) {
-      err(EXIT_FAILURE, "select");
+    if (rv < 0) {
+      switch (errno) {
+      case EWOULDBLOCK:
+      case EINTR:
+        continue;
+      default:
+        err(EXIT_FAILURE, "select");
+      }
     }
-    if (rv > 0) {
-      /* Handle buffers in the following order
-       *   Error
-       *   Output
-       *   Input
-       * In other words, ensure we can write, make room, read more data
-       */
 
-      if (FD_ISSET(DeviceFd, &OutFdSet)) {
-        /* Write to serial port */
-        while (!IsBufferEmpty(&ToDevBuf)) {
-          C = GetFromBuffer(&ToDevBuf);
-          switch (write(DeviceFd, &C, 1)) {
-          case 1:
-            if (idle_timeout > 0)
-              alarm(idle_timeout);
-            continue;
-          case 0:
-            LogMsg(LOG_INFO, "EOF");
+    /* Handle buffers in the following order
+     *   Error
+     *   Output
+     *   Input
+     * In other words, ensure we can write, make room, read more data
+     */
+
+    if (FD_ISSET(DeviceFd, &OutFdSet)) {
+      /* Write to serial port */
+      while (!IsBufferEmpty(&ToDevBuf)) {
+        C = GetFromBuffer(&ToDevBuf);
+        switch (write(DeviceFd, &C, 1)) {
+        case 1:
+          if (idle_timeout > 0)
+            alarm(idle_timeout);
+          continue;
+        case 0:
+          LogMsg(LOG_INFO, "EOF");
+          return (NoError);
+        case -1:
+          if (errno == EWOULDBLOCK) {
+            PushToBuffer(&ToDevBuf, C);
+          } else {
+            LogMsg(LOG_NOTICE, "Error writing to device.");
             return (NoError);
-          case -1:
-            if (errno == EWOULDBLOCK) {
-              PushToBuffer(&ToDevBuf, C);
-            } else {
-              LogMsg(LOG_NOTICE, "Error writing to device.");
-              return (NoError);
-            }
           }
-          break;
         }
+        break;
       }
+    }
 
-      if (FD_ISSET(STDOUT_FILENO, &OutFdSet)) {
-        /* Write to network */
-        while (!IsBufferEmpty(&ToNetBuf)) {
-          C = GetFromBuffer(&ToNetBuf);
-          switch (write(STDOUT_FILENO, &C, 1)) {
-          case 1:
-            if (idle_timeout > 0)
-              alarm(idle_timeout);
-            continue;
-          case 0:
-            LogMsg(LOG_INFO, "EOF");
+    if (FD_ISSET(STDOUT_FILENO, &OutFdSet)) {
+      /* Write to network */
+      while (!IsBufferEmpty(&ToNetBuf)) {
+        C = GetFromBuffer(&ToNetBuf);
+        switch (write(STDOUT_FILENO, &C, 1)) {
+        case 1:
+          if (idle_timeout > 0)
+            alarm(idle_timeout);
+          continue;
+        case 0:
+          LogMsg(LOG_INFO, "EOF");
+          return (NoError);
+        case -1:
+          if (errno == EWOULDBLOCK) {
+            PushToBuffer(&ToNetBuf, C);
+          } else {
+            LogMsg(LOG_NOTICE, "Error writing to network.");
             return (NoError);
-          case -1:
-            if (errno == EWOULDBLOCK) {
-              PushToBuffer(&ToNetBuf, C);
-            } else {
-              LogMsg(LOG_NOTICE, "Error writing to network.");
-              return (NoError);
-            }
           }
-          break;
         }
+        break;
       }
+    }
 
-      if (FD_ISSET(DeviceFd, &InFdSet)) {
-        /* Read from serial port */
-        while (!IsBufferFull(&ToNetBuf)) {
-          switch (read(DeviceFd, &C, 1)) {
-          case 1:
-            EscWriteChar(&ToNetBuf, C);
-            if (idle_timeout > 0)
-              alarm(idle_timeout);
-            continue;
-          case 0:
-            LogMsg(LOG_INFO, "EOF");
+    if (FD_ISSET(DeviceFd, &InFdSet)) {
+      /* Read from serial port */
+      while (!IsBufferFull(&ToNetBuf)) {
+        switch (read(DeviceFd, &C, 1)) {
+        case 1:
+          EscWriteChar(&ToNetBuf, C);
+          if (idle_timeout > 0)
+            alarm(idle_timeout);
+          continue;
+        case 0:
+          LogMsg(LOG_INFO, "EOF");
+          return (NoError);
+        case -1:
+          if (errno != EWOULDBLOCK) {
+            LogMsg(LOG_NOTICE, "Error reading from device.");
             return (NoError);
-          case -1:
-            if (errno != EWOULDBLOCK) {
-              LogMsg(LOG_NOTICE, "Error reading from device.");
-              return (NoError);
-            }
           }
-          break;
         }
+        break;
       }
+    }
 
-      if (FD_ISSET(STDIN_FILENO, &InFdSet)) {
-        /* Read from network */
-        while (!IsBufferFull(&ToDevBuf)) {
-          switch (read(STDIN_FILENO, &C, 1)) {
-          case 1:
-            EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
-            if (idle_timeout > 0)
-              alarm(idle_timeout);
-            continue;
-          case 0:
-            LogMsg(LOG_INFO, "EOF");
+    if (FD_ISSET(STDIN_FILENO, &InFdSet)) {
+      /* Read from network */
+      while (!IsBufferFull(&ToDevBuf)) {
+        switch (read(STDIN_FILENO, &C, 1)) {
+        case 1:
+          EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
+          if (idle_timeout > 0)
+            alarm(idle_timeout);
+          continue;
+        case 0:
+          LogMsg(LOG_INFO, "EOF");
+          return (NoError);
+        case -1:
+          if (errno != EWOULDBLOCK) {
+            LogMsg(LOG_NOTICE, "Error reading from network.");
             return (NoError);
-          case -1:
-            if (errno != EWOULDBLOCK) {
-              LogMsg(LOG_NOTICE, "Error reading from network.");
-              return (NoError);
-            }
           }
-          break;
         }
+        break;
       }
+    }
 
-      /* Check if the buffer is not full and remote flow is off */
-      if (RemoteFlowOff == True && IsBufferFull(&ToDevBuf) == False) {
-        /* Send a flow control resume command */
-        SendCPCFlowCommand(&ToNetBuf, TNASC_FLOWCONTROL_RESUME);
-        RemoteFlowOff = False;
-      }
+    /* Check if the buffer is not full and remote flow is off */
+    if (RemoteFlowOff == True && IsBufferFull(&ToDevBuf) == False) {
+      /* Send a flow control resume command */
+      SendCPCFlowCommand(&ToNetBuf, TNASC_FLOWCONTROL_RESUME);
+      RemoteFlowOff = False;
     }
 
     /* Check the port state and notify the client if it's changed */
@@ -1897,9 +1902,5 @@ int main(int argc, char *argv[]) {
       FD_SET(DeviceFd, &OutFdSet);
     if (!IsBufferEmpty(&ToNetBuf))
       FD_SET(STDOUT_FILENO, &OutFdSet);
-
-    /* Set up timeout for modem status polling */
-    if (ETimeout != NULL)
-      *ETimeout = BTimeout;
   }
 }
