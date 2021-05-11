@@ -1769,12 +1769,11 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno == EWOULDBLOCK) {
-            PushToBuffer(&ToDevBuf, C);
-          } else {
+          if (errno != EWOULDBLOCK) {
             LogMsg(LOG_NOTICE, "Error writing to device.");
             return (NoError);
           }
+          PushToBuffer(&ToDevBuf, C);
         }
         break;
       }
@@ -1793,12 +1792,11 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno == EWOULDBLOCK) {
-            PushToBuffer(&ToNetBuf, C);
-          } else {
+          if (errno != EWOULDBLOCK) {
             LogMsg(LOG_NOTICE, "Error writing to network.");
             return (NoError);
           }
+          PushToBuffer(&ToNetBuf, C);
         }
         break;
       }
