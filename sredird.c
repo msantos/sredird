@@ -1741,7 +1741,7 @@ int main(int argc, char *argv[]) {
     rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
     if (rv < 0) {
       switch (errno) {
-      case EWOULDBLOCK:
+      case EAGAIN:
       case EINTR:
         continue;
       default:
@@ -1769,7 +1769,7 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno != EWOULDBLOCK) {
+          if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to device.");
             return (NoError);
           }
@@ -1792,7 +1792,7 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno != EWOULDBLOCK) {
+          if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to network.");
             return (NoError);
           }
@@ -1815,7 +1815,7 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno != EWOULDBLOCK) {
+          if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from device.");
             return (NoError);
           }
@@ -1837,7 +1837,7 @@ int main(int argc, char *argv[]) {
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
         case -1:
-          if (errno != EWOULDBLOCK) {
+          if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from network.");
             return (NoError);
           }
