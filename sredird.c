@@ -1757,14 +1757,16 @@ int main(int argc, char *argv[]) {
      */
 
     if (FD_ISSET(DeviceFd, &OutFdSet)) {
+      Boolean b = True;
+
       /* Write to serial port */
-      while (!IsBufferEmpty(&ToDevBuf)) {
+      while (b && !IsBufferEmpty(&ToDevBuf)) {
         C = GetFromBuffer(&ToDevBuf);
         switch (write(DeviceFd, &C, 1)) {
         case 1:
           if (idle_timeout > 0)
             alarm(idle_timeout);
-          continue;
+          break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
@@ -1774,20 +1776,23 @@ int main(int argc, char *argv[]) {
             return (NoError);
           }
           PushToBuffer(&ToDevBuf, C);
+          b = False;
+          break;
         }
-        break;
       }
     }
 
     if (FD_ISSET(STDOUT_FILENO, &OutFdSet)) {
+      Boolean b = True;
+
       /* Write to network */
-      while (!IsBufferEmpty(&ToNetBuf)) {
+      while (b && !IsBufferEmpty(&ToNetBuf)) {
         C = GetFromBuffer(&ToNetBuf);
         switch (write(STDOUT_FILENO, &C, 1)) {
         case 1:
           if (idle_timeout > 0)
             alarm(idle_timeout);
-          continue;
+          break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
@@ -1797,20 +1802,23 @@ int main(int argc, char *argv[]) {
             return (NoError);
           }
           PushToBuffer(&ToNetBuf, C);
+          b = False;
+          break;
         }
-        break;
       }
     }
 
     if (FD_ISSET(DeviceFd, &InFdSet)) {
+      Boolean b = True;
+
       /* Read from serial port */
-      while (!IsBufferFull(&ToNetBuf)) {
+      while (b && !IsBufferFull(&ToNetBuf)) {
         switch (read(DeviceFd, &C, 1)) {
         case 1:
           EscWriteChar(&ToNetBuf, C);
           if (idle_timeout > 0)
             alarm(idle_timeout);
-          continue;
+          break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
@@ -1819,20 +1827,23 @@ int main(int argc, char *argv[]) {
             LogMsg(LOG_NOTICE, "Error reading from device.");
             return (NoError);
           }
+          b = False;
+          break;
         }
-        break;
       }
     }
 
     if (FD_ISSET(STDIN_FILENO, &InFdSet)) {
+      Boolean b = True;
+
       /* Read from network */
-      while (!IsBufferFull(&ToDevBuf)) {
+      while (b && !IsBufferFull(&ToDevBuf)) {
         switch (read(STDIN_FILENO, &C, 1)) {
         case 1:
           EscRedirectChar(&ToNetBuf, &ToDevBuf, DeviceFd, C);
           if (idle_timeout > 0)
             alarm(idle_timeout);
-          continue;
+          break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
           return (NoError);
@@ -1841,8 +1852,9 @@ int main(int argc, char *argv[]) {
             LogMsg(LOG_NOTICE, "Error reading from network.");
             return (NoError);
           }
+          b = False;
+          break;
         }
-        break;
       }
     }
 
