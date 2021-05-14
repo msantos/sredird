@@ -363,7 +363,7 @@ void PushToBuffer(BufferType *B, unsigned char C) {
 unsigned char GetFromBuffer(BufferType *B) {
   unsigned char C = B->Buffer[B->RdPos];
   B->RdPos = (B->RdPos + 1) % BufferSize;
-  return (C);
+  return C;
 }
 
 /* Generic log function with log level control. Uses the same log levels
@@ -453,47 +453,47 @@ unsigned long int GetPortSpeed(int PortFd) {
 
   switch (Speed) {
   case B50:
-    return (50UL);
+    return 50UL;
   case B75:
-    return (75UL);
+    return 75UL;
   case B110:
-    return (110UL);
+    return 110UL;
   case B134:
-    return (134UL);
+    return 134UL;
   case B150:
-    return (150UL);
+    return 150UL;
   case B200:
-    return (200UL);
+    return 200UL;
   case B300:
-    return (300UL);
+    return 300UL;
   case B600:
-    return (600UL);
+    return 600UL;
   case B1200:
-    return (1200UL);
+    return 1200UL;
   case B1800:
-    return (1800UL);
+    return 1800UL;
   case B2400:
-    return (2400UL);
+    return 2400UL;
   case B4800:
-    return (4800UL);
+    return 4800UL;
   case B9600:
-    return (9600UL);
+    return 9600UL;
   case B19200:
-    return (19200UL);
+    return 19200UL;
   case B38400:
-    return (38400UL);
+    return 38400UL;
   case B57600:
-    return (57600UL);
+    return 57600UL;
   case B115200:
-    return (115200UL);
+    return 115200UL;
   case B230400:
-    return (230400UL);
+    return 230400UL;
 #ifdef B460800
   case B460800:
-    return (460800UL);
+    return 460800UL;
 #endif
   default:
-    return (0UL);
+    return 0UL;
   }
 }
 
@@ -508,15 +508,15 @@ unsigned char GetPortDataSize(int PortFd) {
 
   switch (DataSize) {
   case CS5:
-    return ((unsigned char)5);
+    return (unsigned char)5;
   case CS6:
-    return ((unsigned char)6);
+    return (unsigned char)6;
   case CS7:
-    return ((unsigned char)7);
+    return (unsigned char)7;
   case CS8:
-    return ((unsigned char)8);
+    return (unsigned char)8;
   default:
-    return ((unsigned char)0);
+    return (unsigned char)0;
   }
 }
 
@@ -528,13 +528,13 @@ unsigned char GetPortParity(int PortFd) {
     err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & PARENB) == 0)
-    return ((unsigned char)1);
+    return (unsigned char)1;
 
   if ((PortSettings.c_cflag & PARENB) != 0 &&
       (PortSettings.c_cflag & PARODD) != 0)
-    return ((unsigned char)2);
+    return (unsigned char)2;
 
-  return ((unsigned char)3);
+  return (unsigned char)3;
 }
 
 /* Retrieves the stop bits size from PortFd */
@@ -545,9 +545,9 @@ unsigned char GetPortStopSize(int PortFd) {
     err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & CSTOPB) == 0)
-    return ((unsigned char)1);
+    return (unsigned char)1;
   else
-    return ((unsigned char)2);
+    return (unsigned char)2;
 }
 
 /* Retrieves the flow control status, including DTR and RTS status,
@@ -567,50 +567,50 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   /* Com Port Flow Control Setting (outbound/both) */
   case 0:
     if (PortSettings.c_iflag & IXON)
-      return ((unsigned char)2);
+      return (unsigned char)2;
     if (PortSettings.c_cflag & CRTSCTS)
-      return ((unsigned char)3);
-    return ((unsigned char)1);
+      return (unsigned char)3;
+    return (unsigned char)1;
     break;
 
   /* BREAK State  */
   case 4:
     if (BreakSignaled == True)
-      return ((unsigned char)5);
+      return (unsigned char)5;
     else
-      return ((unsigned char)6);
+      return (unsigned char)6;
     break;
 
   /* DTR Signal State */
   case 7:
     if (MLines & TIOCM_DTR)
-      return ((unsigned char)8);
+      return (unsigned char)8;
     else
-      return ((unsigned char)9);
+      return (unsigned char)9;
     break;
 
   /* RTS Signal State */
   case 10:
     if (MLines & TIOCM_RTS)
-      return ((unsigned char)11);
+      return (unsigned char)11;
     else
-      return ((unsigned char)12);
+      return (unsigned char)12;
     break;
 
   /* Com Port Flow Control Setting (inbound) */
   case 13:
     if (PortSettings.c_iflag & IXOFF)
-      return ((unsigned char)15);
+      return (unsigned char)15;
     if (PortSettings.c_cflag & CRTSCTS)
-      return ((unsigned char)16);
-    return ((unsigned char)14);
+      return (unsigned char)16;
+    return (unsigned char)14;
 
   default:
     if (PortSettings.c_iflag & IXON)
-      return ((unsigned char)2);
+      return (unsigned char)2;
     if (PortSettings.c_cflag & CRTSCTS)
-      return ((unsigned char)3);
-    return ((unsigned char)1);
+      return (unsigned char)3;
+    return (unsigned char)1;
   }
 }
 
@@ -639,7 +639,7 @@ unsigned char GetModemState(int PortFd, unsigned char PMState) {
   if ((MState & 16) != (PMState & 16))
     MState += (unsigned char)1;
 
-  return (MState);
+  return MState;
 }
 
 /* Set the serial port data size */
@@ -1551,7 +1551,7 @@ int main(int argc, char *argv[]) {
   struct sigaction act = {0};
 
   if (restrict_process_init() < 0) {
-    return (Error);
+    return Error;
   }
 
   DeviceName = "nodev";
@@ -1561,7 +1561,7 @@ int main(int argc, char *argv[]) {
     case 'i':
       if (CiscoIOSCompatible) {
         Usage();
-        return (Error);
+        return Error;
       }
       CiscoIOSCompatible = True;
       break;
@@ -1571,7 +1571,7 @@ int main(int argc, char *argv[]) {
     case 'h':
     default:
       Usage();
-      return (Error);
+      return Error;
     }
   }
 
@@ -1581,7 +1581,7 @@ int main(int argc, char *argv[]) {
   /* Check the command line argument count */
   if (argc < 2) {
     Usage();
-    return (Error);
+    return Error;
   }
 
   /* Sets the log level */
@@ -1615,28 +1615,28 @@ int main(int argc, char *argv[]) {
 
   /* Register exit and signal handler functions */
   if (atexit(ExitFunction) != 0)
-    return (Error);
+    return Error;
 
   act.sa_handler = SignalFunction;
   (void)sigfillset(&act.sa_mask);
 
   if (sigaction(SIGHUP, &act, NULL) != 0)
-    return (Error);
+    return Error;
   if (sigaction(SIGQUIT, &act, NULL) != 0)
-    return (Error);
+    return Error;
   if (sigaction(SIGABRT, &act, NULL) != 0)
-    return (Error);
+    return Error;
   if (sigaction(SIGPIPE, &act, NULL) != 0)
-    return (Error);
+    return Error;
   if (sigaction(SIGTERM, &act, NULL) != 0)
-    return (Error);
+    return Error;
   if (sigaction(SIGALRM, &act, NULL) != 0)
-    return (Error);
+    return Error;
 
   /* Register the function to be called on break condition */
   act.sa_handler = BreakFunction;
   if (sigaction(SIGINT, &act, NULL) != 0)
-    return (Error);
+    return Error;
 
   if (idle_timeout > 0)
     alarm(idle_timeout);
@@ -1646,7 +1646,7 @@ int main(int argc, char *argv[]) {
       OpenError) {
     /* Open failed */
     LogMsg(LOG_ERR, "Unable to open device %s. Exiting.", DeviceName);
-    return (Error);
+    return Error;
   }
 
   /* Get the actual port settings */
@@ -1729,7 +1729,7 @@ int main(int argc, char *argv[]) {
   FD_SET(STDOUT_FILENO, &OutFdSet);
 
   if (restrict_process_stdio() < 0) {
-    return (Error);
+    return Error;
   }
 
   /* Main loop with fd's control */
@@ -1769,11 +1769,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return (NoError);
+          return NoError;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to device.");
-            return (NoError);
+            return NoError;
           }
           PushToBuffer(&ToDevBuf, C);
           b = False;
@@ -1795,11 +1795,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return (NoError);
+          return NoError;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to network.");
-            return (NoError);
+            return NoError;
           }
           PushToBuffer(&ToNetBuf, C);
           b = False;
@@ -1821,11 +1821,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return (NoError);
+          return NoError;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from device.");
-            return (NoError);
+            return NoError;
           }
           b = False;
           break;
@@ -1846,11 +1846,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return (NoError);
+          return NoError;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from network.");
-            return (NoError);
+            return NoError;
           }
           b = False;
           break;
