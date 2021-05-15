@@ -4,7 +4,7 @@
     Copyright (C) 1999 - 2003 InfoTecna s.r.l.
     Copyright (C) 2001, 2002 Trustees of Columbia University
     in the City of New York
-    Copyright (C) 2020 Michael Santos <michael.santos@gmail.com>
+    Copyright (C) 2020-2021 Michael Santos <michael.santos@gmail.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,9 +21,6 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-/* Return NoError, which is 0, on success */
-
-/* Standard library includes */
 #include <sys/types.h>
 
 #include <err.h>
@@ -65,57 +62,57 @@
 #define BufferSize 2048
 
 /* Base Telnet protocol constants (STD 8) */
-#define TNSE ((unsigned char)240)
-#define TNNOP ((unsigned char)241)
-#define TNSB ((unsigned char)250)
-#define TNWILL ((unsigned char)251)
-#define TNWONT ((unsigned char)252)
-#define TNDO ((unsigned char)253)
-#define TNDONT ((unsigned char)254)
-#define TNIAC ((unsigned char)255)
+#define TNSE 240
+#define TNNOP 241
+#define TNSB 250
+#define TNWILL 251
+#define TNWONT 252
+#define TNDO 253
+#define TNDONT 254
+#define TNIAC 255
 
 /* Base Telnet protocol options constants (STD 27, STD 28, STD 29) */
-#define TN_TRANSMIT_BINARY ((unsigned char)0)
-#define TN_ECHO ((unsigned char)1)
-#define TN_SUPPRESS_GO_AHEAD ((unsigned char)3)
+#define TN_TRANSMIT_BINARY 0
+#define TN_ECHO 1
+#define TN_SUPPRESS_GO_AHEAD 3
 
 /* Base Telnet Com Port Control (CPC) protocol constants (RFC 2217) */
-#define TNCOM_PORT_OPTION ((unsigned char)44)
+#define TNCOM_PORT_OPTION 44
 
 /* CPC Client to Access Server constants */
-#define TNCAS_SIGNATURE ((unsigned char)0)
-#define TNCAS_SET_BAUDRATE ((unsigned char)1)
-#define TNCAS_SET_DATASIZE ((unsigned char)2)
-#define TNCAS_SET_PARITY ((unsigned char)3)
-#define TNCAS_SET_STOPSIZE ((unsigned char)4)
-#define TNCAS_SET_CONTROL ((unsigned char)5)
-#define TNCAS_NOTIFY_LINESTATE ((unsigned char)6)
-#define TNCAS_NOTIFY_MODEMSTATE ((unsigned char)7)
-#define TNCAS_FLOWCONTROL_SUSPEND ((unsigned char)8)
-#define TNCAS_FLOWCONTROL_RESUME ((unsigned char)9)
-#define TNCAS_SET_LINESTATE_MASK ((unsigned char)10)
-#define TNCAS_SET_MODEMSTATE_MASK ((unsigned char)11)
-#define TNCAS_PURGE_DATA ((unsigned char)12)
+#define TNCAS_SIGNATURE 0
+#define TNCAS_SET_BAUDRATE 1
+#define TNCAS_SET_DATASIZE 2
+#define TNCAS_SET_PARITY 3
+#define TNCAS_SET_STOPSIZE 4
+#define TNCAS_SET_CONTROL 5
+#define TNCAS_NOTIFY_LINESTATE 6
+#define TNCAS_NOTIFY_MODEMSTATE 7
+#define TNCAS_FLOWCONTROL_SUSPEND 8
+#define TNCAS_FLOWCONTROL_RESUME 9
+#define TNCAS_SET_LINESTATE_MASK 10
+#define TNCAS_SET_MODEMSTATE_MASK 11
+#define TNCAS_PURGE_DATA 12
 
 /* CPC Access Server to Client constants */
-#define TNASC_SIGNATURE ((unsigned char)100)
-#define TNASC_SET_BAUDRATE ((unsigned char)101)
-#define TNASC_SET_DATASIZE ((unsigned char)102)
-#define TNASC_SET_PARITY ((unsigned char)103)
-#define TNASC_SET_STOPSIZE ((unsigned char)104)
-#define TNASC_SET_CONTROL ((unsigned char)105)
-#define TNASC_NOTIFY_LINESTATE ((unsigned char)106)
-#define TNASC_NOTIFY_MODEMSTATE ((unsigned char)107)
-#define TNASC_FLOWCONTROL_SUSPEND ((unsigned char)108)
-#define TNASC_FLOWCONTROL_RESUME ((unsigned char)109)
-#define TNASC_SET_LINESTATE_MASK ((unsigned char)110)
-#define TNASC_SET_MODEMSTATE_MASK ((unsigned char)111)
-#define TNASC_PURGE_DATA ((unsigned char)112)
+#define TNASC_SIGNATURE 100
+#define TNASC_SET_BAUDRATE 101
+#define TNASC_SET_DATASIZE 102
+#define TNASC_SET_PARITY 103
+#define TNASC_SET_STOPSIZE 104
+#define TNASC_SET_CONTROL 105
+#define TNASC_NOTIFY_LINESTATE 106
+#define TNASC_NOTIFY_MODEMSTATE 107
+#define TNASC_FLOWCONTROL_SUSPEND 108
+#define TNASC_FLOWCONTROL_RESUME 109
+#define TNASC_SET_LINESTATE_MASK 110
+#define TNASC_SET_MODEMSTATE_MASK 111
+#define TNASC_PURGE_DATA 112
 
 /* Modem state effective change mask */
-#define ModemStateECMask ((unsigned char)255)
+#define ModemStateECMask 255
 
-#define LineStateECMask ((unsigned char)255)
+#define LineStateECMask 255
 
 /* Default modem state polling in milliseconds (100 msec should be enough) */
 #define ModemStatePolling 100
@@ -167,18 +164,18 @@ static unsigned char IACCommand[TmpStrLen];
 static size_t IACPos;
 
 /* Modem state mask set by the client */
-static unsigned char ModemStateMask = ((unsigned char)255);
+static unsigned char ModemStateMask = 255;
 
 /* Line state mask set by the client */
-static unsigned char LineStateMask = ((unsigned char)0);
+static unsigned char LineStateMask = 0;
 
 #ifdef COMMENT
 /* Current status of the line control lines */
-static unsigned char LineState = ((unsigned char)0);
+static unsigned char LineState = 0;
 #endif
 
 /* Current status of the modem control lines */
-static unsigned char ModemState = ((unsigned char)0);
+static unsigned char ModemState = 0;
 
 /* Break state flag */
 static Boolean BreakSignaled = False;
@@ -508,15 +505,15 @@ unsigned char GetPortDataSize(int PortFd) {
 
   switch (DataSize) {
   case CS5:
-    return (unsigned char)5;
+    return 5;
   case CS6:
-    return (unsigned char)6;
+    return 6;
   case CS7:
-    return (unsigned char)7;
+    return 7;
   case CS8:
-    return (unsigned char)8;
+    return 8;
   default:
-    return (unsigned char)0;
+    return 0;
   }
 }
 
@@ -528,13 +525,13 @@ unsigned char GetPortParity(int PortFd) {
     err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & PARENB) == 0)
-    return (unsigned char)1;
+    return 1;
 
   if ((PortSettings.c_cflag & PARENB) != 0 &&
       (PortSettings.c_cflag & PARODD) != 0)
-    return (unsigned char)2;
+    return 2;
 
-  return (unsigned char)3;
+  return 3;
 }
 
 /* Retrieves the stop bits size from PortFd */
@@ -545,9 +542,9 @@ unsigned char GetPortStopSize(int PortFd) {
     err(EXIT_FAILURE, "tcgetattr");
 
   if ((PortSettings.c_cflag & CSTOPB) == 0)
-    return (unsigned char)1;
+    return 1;
   else
-    return (unsigned char)2;
+    return 2;
 }
 
 /* Retrieves the flow control status, including DTR and RTS status,
@@ -567,77 +564,77 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   /* Com Port Flow Control Setting (outbound/both) */
   case 0:
     if (PortSettings.c_iflag & IXON)
-      return (unsigned char)2;
+      return 2;
     if (PortSettings.c_cflag & CRTSCTS)
-      return (unsigned char)3;
-    return (unsigned char)1;
+      return 3;
+    return 1;
     break;
 
   /* BREAK State  */
   case 4:
     if (BreakSignaled == True)
-      return (unsigned char)5;
+      return 5;
     else
-      return (unsigned char)6;
+      return 6;
     break;
 
   /* DTR Signal State */
   case 7:
     if (MLines & TIOCM_DTR)
-      return (unsigned char)8;
+      return 8;
     else
-      return (unsigned char)9;
+      return 9;
     break;
 
   /* RTS Signal State */
   case 10:
     if (MLines & TIOCM_RTS)
-      return (unsigned char)11;
+      return 11;
     else
-      return (unsigned char)12;
+      return 12;
     break;
 
   /* Com Port Flow Control Setting (inbound) */
   case 13:
     if (PortSettings.c_iflag & IXOFF)
-      return (unsigned char)15;
+      return 15;
     if (PortSettings.c_cflag & CRTSCTS)
-      return (unsigned char)16;
-    return (unsigned char)14;
+      return 16;
+    return 14;
 
   default:
     if (PortSettings.c_iflag & IXON)
-      return (unsigned char)2;
+      return 2;
     if (PortSettings.c_cflag & CRTSCTS)
-      return (unsigned char)3;
-    return (unsigned char)1;
+      return 3;
+    return 1;
   }
 }
 
 /* Return the status of the modem control lines (DCD, CTS, DSR, RNG) */
 unsigned char GetModemState(int PortFd, unsigned char PMState) {
   int MLines;
-  unsigned char MState = (unsigned char)0;
+  unsigned char MState = 0;
 
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
     err(EXIT_FAILURE, "ioctl(TIOCMGET)");
 
   if ((MLines & TIOCM_CAR) != 0)
-    MState += (unsigned char)128;
+    MState += 128;
   if ((MLines & TIOCM_RNG) != 0)
-    MState += (unsigned char)64;
+    MState += 64;
   if ((MLines & TIOCM_DSR) != 0)
-    MState += (unsigned char)32;
+    MState += 32;
   if ((MLines & TIOCM_CTS) != 0)
-    MState += (unsigned char)16;
+    MState += 16;
   if ((MState & 128) != (PMState & 128))
-    MState += (unsigned char)8;
+    MState += 8;
   if ((MState & 64) != (PMState & 64))
-    MState += (unsigned char)4;
+    MState += 4;
   if ((MState & 32) != (PMState & 32))
-    MState += (unsigned char)2;
+    MState += 2;
   if ((MState & 16) != (PMState & 16))
-    MState += (unsigned char)1;
+    MState += 1;
 
   return MState;
 }
