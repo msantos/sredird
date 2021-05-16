@@ -568,31 +568,24 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
     if (PortSettings.c_cflag & CRTSCTS)
       return 3;
     return 1;
-    break;
 
   /* BREAK State  */
   case 4:
     if (BreakSignaled == True)
       return 5;
-    else
-      return 6;
-    break;
+    return 6;
 
   /* DTR Signal State */
   case 7:
     if (MLines & TIOCM_DTR)
       return 8;
-    else
-      return 9;
-    break;
+    return 9;
 
   /* RTS Signal State */
   case 10:
     if (MLines & TIOCM_RTS)
       return 11;
-    else
-      return 12;
-    break;
+    return 12;
 
   /* Com Port Flow Control Setting (inbound) */
   case 13:
