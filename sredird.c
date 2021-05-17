@@ -34,6 +34,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdnoreturn.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -221,13 +222,13 @@ of the syslog(3) system call */
 void LogMsg(int LogLevel, const char *const fmt, ...);
 
 /* Function executed when the program exits */
-void ExitFunction(void);
+static noreturn void ExitFunction(void);
 
 /* Function called on many signals */
-void SignalFunction(int unused);
+static noreturn void SignalFunction(int unused);
 
 /* Function called on break signal */
-void BreakFunction(int unused);
+static noreturn void BreakFunction(int unused);
 
 /* Retrieves the port speed from PortFd */
 unsigned long int GetPortSpeed(int PortFd);
@@ -377,7 +378,7 @@ void LogMsg(int LogLevel, const char *const fmt, ...) {
 }
 
 /* Function executed when the program exits */
-void ExitFunction(void) {
+static noreturn void ExitFunction(void) {
   const char *message = "SRedird stopped.\n";
 
   /* Restores initial port settings */
@@ -404,7 +405,7 @@ void ExitFunction(void) {
 }
 
 /* Function called on many signals */
-void SignalFunction(int unused) {
+static noreturn void SignalFunction(int unused) {
   (void)unused;
 
   /* Same as the exit function */
@@ -413,7 +414,7 @@ void SignalFunction(int unused) {
 
 /* Function called on break signal */
 /* Unimplemented yet */
-void BreakFunction(int unused) {
+static noreturn void BreakFunction(int unused) {
 #ifndef COMMENT
   (void)unused;
 
@@ -543,8 +544,8 @@ unsigned char GetPortStopSize(int PortFd) {
 
   if ((PortSettings.c_cflag & CSTOPB) == 0)
     return 1;
-  else
-    return 2;
+
+  return 2;
 }
 
 /* Retrieves the flow control status, including DTR and RTS status,
