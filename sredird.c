@@ -385,21 +385,15 @@ static noreturn void ExitFunction(void) {
   if (DeviceFd > -1) {
     if (InitPortRetrieved == True)
       tcsetattr(DeviceFd, TCSANOW, &InitialPortSettings);
-
-    /* Closes the device */
-    close(DeviceFd);
   }
 
-  /* Closes the sockets */
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-
   /* Program termination notification */
-  if (MaxLogLevel >= LOG_NOTICE)
+  if (MaxLogLevel >= LOG_NOTICE) {
     /* warning: ignoring return value of ‘write’, declared with attribute
      * warn_unused_result [-Wunused-result] */
     if (write(STDERR_FILENO, message, strlen(message)) == -1) {
     }
+  }
 
   _exit(0);
 }
