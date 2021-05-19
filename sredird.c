@@ -51,11 +51,6 @@
 #define VersionId "2.2.1"
 #define SRedirdVersionId "Version " VersionId ", 20 February 2004"
 
-/* Error conditions constants */
-#define NoError 0
-#define Error 1
-#define OpenError -1
-
 /* Maximum length of temporary strings */
 #define TmpStrLen 255
 
@@ -1536,7 +1531,7 @@ int main(int argc, char *argv[]) {
   struct sigaction act = {0};
 
   if (restrict_process_init() < 0) {
-    return Error;
+    return EXIT_FAILURE;
   }
 
   DeviceName = "nodev";
@@ -1546,7 +1541,7 @@ int main(int argc, char *argv[]) {
     case 'i':
       if (CiscoIOSCompatible) {
         Usage();
-        return Error;
+        return EXIT_FAILURE;
       }
       CiscoIOSCompatible = True;
       break;
@@ -1556,7 +1551,7 @@ int main(int argc, char *argv[]) {
     case 'h':
     default:
       Usage();
-      return Error;
+      return EXIT_FAILURE;
     }
   }
 
@@ -1566,7 +1561,7 @@ int main(int argc, char *argv[]) {
   /* Check the command line argument count */
   if (argc < 2) {
     Usage();
-    return Error;
+    return EXIT_FAILURE;
   }
 
   /* Sets the log level */
@@ -1600,38 +1595,37 @@ int main(int argc, char *argv[]) {
 
   /* Register exit and signal handler functions */
   if (atexit(ExitFunction) != 0)
-    return Error;
+    return EXIT_FAILURE;
 
   act.sa_handler = SignalFunction;
   (void)sigfillset(&act.sa_mask);
 
   if (sigaction(SIGHUP, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
   if (sigaction(SIGQUIT, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
   if (sigaction(SIGABRT, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
   if (sigaction(SIGPIPE, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
   if (sigaction(SIGTERM, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
   if (sigaction(SIGALRM, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
 
   /* Register the function to be called on break condition */
   act.sa_handler = BreakFunction;
   if (sigaction(SIGINT, &act, NULL) != 0)
-    return Error;
+    return EXIT_FAILURE;
 
   if (idle_timeout > 0)
     alarm(idle_timeout);
 
   /* Open the device */
-  if ((DeviceFd = open(DeviceName, O_RDWR | O_NOCTTY | O_NDELAY, 0)) ==
-      OpenError) {
+  if ((DeviceFd = open(DeviceName, O_RDWR | O_NOCTTY | O_NDELAY, 0)) == -1) {
     /* Open failed */
     LogMsg(LOG_ERR, "Unable to open device %s. Exiting.", DeviceName);
-    return Error;
+    return EXIT_FAILURE;
   }
 
   /* Get the actual port settings */
@@ -1655,8 +1649,7 @@ int main(int argc, char *argv[]) {
     err(EXIT_FAILURE, "tcsetattr");
 
   /* Reset the device fd to blocking mode */
-  if (fcntl(DeviceFd, F_SETFL, fcntl(DeviceFd, F_GETFL) & ~(O_NDELAY)) ==
-      OpenError)
+  if (fcntl(DeviceFd, F_SETFL, fcntl(DeviceFd, F_GETFL) & ~(O_NDELAY)) == -1)
     LogMsg(LOG_ERR, "Unable to reset device to non blocking mode, ignoring.");
 
   /* Initialize the input buffer */
@@ -1714,7 +1707,7 @@ int main(int argc, char *argv[]) {
   FD_SET(STDOUT_FILENO, &OutFdSet);
 
   if (restrict_process_stdio() < 0) {
-    return Error;
+    return EXIT_FAILURE;
   }
 
   /* Main loop with fd's control */
@@ -1754,11 +1747,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return NoError;
+          return EXIT_SUCCESS;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to device.");
-            return NoError;
+            return EXIT_SUCCESS;
           }
           PushToBuffer(&ToDevBuf, C);
           b = False;
@@ -1780,11 +1773,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return NoError;
+          return EXIT_SUCCESS;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error writing to network.");
-            return NoError;
+            return EXIT_SUCCESS;
           }
           PushToBuffer(&ToNetBuf, C);
           b = False;
@@ -1806,11 +1799,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return NoError;
+          return EXIT_SUCCESS;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from device.");
-            return NoError;
+            return EXIT_SUCCESS;
           }
           b = False;
           break;
@@ -1831,11 +1824,11 @@ int main(int argc, char *argv[]) {
           break;
         case 0:
           LogMsg(LOG_INFO, "EOF");
-          return NoError;
+          return EXIT_SUCCESS;
         case -1:
           if (errno != EAGAIN) {
             LogMsg(LOG_NOTICE, "Error reading from network.");
-            return NoError;
+            return EXIT_SUCCESS;
           }
           b = False;
           break;
