@@ -21,7 +21,7 @@ CFLAGS ?= -O3 -pipe -fomit-frame-pointer \
 	-DRESTRICT_PROCESS_$(RESTRICT_PROCESS) \
 	$(SREDIRD_CFLAGS)
 
-WFLAGS ?= -Wall -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
+WFLAGS ?= -Wall -Wextra -W -Wshadow -Wpointer-arith -Wwrite-strings -pedantic \
 	-Wformat -Werror=format-security
 LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
