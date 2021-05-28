@@ -21,8 +21,6 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include <sys/types.h>
-
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -30,6 +28,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -38,8 +37,6 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/times.h>
 #include <syslog.h>
 #include <termios.h>
 #include <time.h>
@@ -112,6 +109,10 @@
 
 /* Default modem state polling in milliseconds (100 msec should be enough) */
 #define ModemStatePolling 100
+
+#define COUNT(_array) (sizeof(_array) / sizeof(_array[0]))
+
+#define DEVICE_FILENO 2
 
 /* Standard boolean definition */
 typedef enum { False, True } Boolean;
@@ -1486,11 +1487,8 @@ void Usage(void) {
 
 /* Main function */
 int main(int argc, char *argv[]) {
-  /* Input fd set */
-  fd_set InFdSet;
-
-  /* Output fd set */
-  fd_set OutFdSet;
+  /* fd set */
+  struct pollfd fds[3] = {0};
 
   /* Char read */
   unsigned char C;
@@ -1498,14 +1496,8 @@ int main(int argc, char *argv[]) {
   /* Actual port settings */
   struct termios PortSettings;
 
-  /* Base timeout for stream reading */
-  struct timeval BTimeout;
-
-  /* Timeout for stream reading */
-  struct timeval RTimeout;
-
-  /* Pointer to timeout structure to set */
-  struct timeval *ETimeout = &RTimeout;
+  /* Poll interval */
+  int poll_timeout;
 
   /* Remote flow control flag */
   Boolean RemoteFlowOff = False;
@@ -1525,7 +1517,6 @@ int main(int argc, char *argv[]) {
   /* Optional argument processing indexes */
   int ch;
 
-  int rv;
   unsigned int idle_timeout = 0;
 
   struct sigaction act = {0};
@@ -1571,16 +1562,9 @@ int main(int argc, char *argv[]) {
   DeviceName = argv[1];
 
   /* Retrieve the polling interval */
+  poll_timeout = ModemStatePolling;
   if (argc > 2) {
-    BTimeout.tv_sec = 0;
-    BTimeout.tv_usec = atol(argv[2]) * 1000;
-
-    if (BTimeout.tv_usec <= 0) {
-      ETimeout = NULL;
-    }
-  } else {
-    BTimeout.tv_sec = 0;
-    BTimeout.tv_usec = ModemStatePolling * 1000;
+    poll_timeout = atoi(argv[2]);
   }
 
   /* Logs sredird start */
@@ -1590,8 +1574,7 @@ int main(int argc, char *argv[]) {
   LogMsg(LOG_INFO, "Log level: %i", MaxLogLevel);
 
   /* Logs the polling interval */
-  LogMsg(LOG_INFO, "Polling interval (ms): %u",
-         (unsigned int)(BTimeout.tv_usec / 1000));
+  LogMsg(LOG_INFO, "Polling interval (ms): %d", poll_timeout);
 
   /* Register exit and signal handler functions */
   if (atexit(ExitFunction) != 0)
@@ -1700,11 +1683,13 @@ int main(int argc, char *argv[]) {
   /* Set up fd sets */
   /* Initially we have to read from all, but we only have data to send
    * to the network */
-  FD_ZERO(&InFdSet);
-  FD_SET(STDIN_FILENO, &InFdSet);
-  FD_SET(DeviceFd, &InFdSet);
-  FD_ZERO(&OutFdSet);
-  FD_SET(STDOUT_FILENO, &OutFdSet);
+  fds[STDIN_FILENO].fd = STDIN_FILENO;
+  fds[STDOUT_FILENO].fd = STDOUT_FILENO;
+  fds[DEVICE_FILENO].fd = DeviceFd;
+
+  fds[STDIN_FILENO].events = POLLIN;
+  fds[STDOUT_FILENO].events = POLLOUT;
+  fds[DEVICE_FILENO].events = POLLIN;
 
   if (restrict_process_stdio() < 0) {
     return EXIT_FAILURE;
@@ -1712,19 +1697,10 @@ int main(int argc, char *argv[]) {
 
   /* Main loop with fd's control */
   for (;;) {
-    /* Set up timeout for modem status polling */
-    if (ETimeout != NULL)
-      *ETimeout = BTimeout;
-
-    rv = select(DeviceFd + 1, &InFdSet, &OutFdSet, NULL, ETimeout);
-    if (rv < 0) {
-      switch (errno) {
-      case EAGAIN:
-      case EINTR:
+    if (poll(fds, COUNT(fds), poll_timeout) < 0) {
+      if (errno == EINTR)
         continue;
-      default:
-        err(EXIT_FAILURE, "select");
-      }
+      err(EXIT_FAILURE, "poll");
     }
 
     /* Handle buffers in the following order
@@ -1733,8 +1709,11 @@ int main(int argc, char *argv[]) {
      *   Input
      * In other words, ensure we can write, make room, read more data
      */
+    if (fds[STDIN_FILENO].revents & POLLHUP) {
+      fds[0].fd = -1;
+    }
 
-    if (FD_ISSET(DeviceFd, &OutFdSet)) {
+    if (fds[DEVICE_FILENO].revents & POLLOUT) {
       Boolean b = True;
 
       /* Write to serial port */
@@ -1760,7 +1739,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (FD_ISSET(STDOUT_FILENO, &OutFdSet)) {
+    if (fds[STDOUT_FILENO].revents & POLLOUT) {
       Boolean b = True;
 
       /* Write to network */
@@ -1786,7 +1765,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (FD_ISSET(DeviceFd, &InFdSet)) {
+    if (fds[DEVICE_FILENO].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
       Boolean b = True;
 
       /* Read from serial port */
@@ -1811,7 +1790,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (FD_ISSET(STDIN_FILENO, &InFdSet)) {
+    if (fds[STDIN_FILENO].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
       Boolean b = True;
 
       /* Read from network */
@@ -1867,12 +1846,13 @@ int main(int argc, char *argv[]) {
 #endif /* COMMENT */
     }
 
-    /* Resets the fd sets */
-    FD_ZERO(&InFdSet);
+    fds[STDIN_FILENO].events = 0;
+    fds[STDOUT_FILENO].events = 0;
+    fds[DEVICE_FILENO].events = 0;
 
     /* Check if the buffer is not full */
     if (IsBufferFull(&ToDevBuf) == False) {
-      FD_SET(STDIN_FILENO, &InFdSet);
+      fds[STDIN_FILENO].events |= POLLIN;
     } else if (RemoteFlowOff == False) {
       /* Send a flow control suspend command */
       SendCPCFlowCommand(&ToNetBuf, TNASC_FLOWCONTROL_SUSPEND);
@@ -1882,13 +1862,12 @@ int main(int argc, char *argv[]) {
     /* If input flow has been disabled from the remote client
     don't read from the device */
     if (!IsBufferFull(&ToNetBuf) && InputFlow == True)
-      FD_SET(DeviceFd, &InFdSet);
+      fds[DEVICE_FILENO].events |= POLLIN;
 
-    FD_ZERO(&OutFdSet);
     /* Check if there are characters available to write */
     if (!IsBufferEmpty(&ToDevBuf))
-      FD_SET(DeviceFd, &OutFdSet);
+      fds[DEVICE_FILENO].events |= POLLOUT;
     if (!IsBufferEmpty(&ToNetBuf))
-      FD_SET(STDOUT_FILENO, &OutFdSet);
+      fds[STDOUT_FILENO].events |= POLLOUT;
   }
 }
