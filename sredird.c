@@ -1709,10 +1709,6 @@ int main(int argc, char *argv[]) {
      *   Input
      * In other words, ensure we can write, make room, read more data
      */
-    if (fds[STDIN_FILENO].revents & POLLHUP) {
-      fds[0].fd = -1;
-    }
-
     if (fds[DEVICE_FILENO].revents & POLLOUT) {
       Boolean b = True;
 
@@ -1765,7 +1761,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (fds[DEVICE_FILENO].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
+    if (fds[DEVICE_FILENO].revents & (POLLIN | POLLERR | POLLNVAL)) {
       Boolean b = True;
 
       /* Read from serial port */
@@ -1790,7 +1786,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (fds[STDIN_FILENO].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
+    if (fds[STDIN_FILENO].revents & (POLLIN | POLLERR | POLLNVAL)) {
       Boolean b = True;
 
       /* Read from network */
@@ -1813,6 +1809,11 @@ int main(int argc, char *argv[]) {
           break;
         }
       }
+    }
+
+    if ((fds[STDIN_FILENO].revents & POLLHUP) ||
+        (fds[DEVICE_FILENO].revents & POLLHUP)) {
+      return EXIT_SUCCESS;
     }
 
     /* Check if the buffer is not full and remote flow is off */
