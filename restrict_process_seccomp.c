@@ -169,7 +169,7 @@ int restrict_process_init() {
   return prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog);
 }
 
-int restrict_process_stdio() {
+int restrict_process_stdio(int devicefd) {
   struct sock_filter filter[] = {
       /* Ensure the syscall arch convention is as expected. */
       BPF_STMT(BPF_LD + BPF_W + BPF_ABS, offsetof(struct seccomp_data, arch)),
@@ -237,6 +237,8 @@ int restrict_process_stdio() {
       .len = (unsigned short)(sizeof(filter) / sizeof(filter[0])),
       .filter = filter,
   };
+
+  (void)devicefd;
 
   if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0)
     return -1;

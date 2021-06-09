@@ -1692,7 +1692,7 @@ int main(int argc, char *argv[]) {
   fds[STDOUT_FILENO].events = POLLOUT;
   fds[DEVICE_FILENO].events = POLLIN;
 
-  if (restrict_process_stdio() < 0) {
+  if (restrict_process_stdio(DeviceFd) < 0) {
     return EXIT_FAILURE;
   }
 

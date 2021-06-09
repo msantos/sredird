@@ -1,4 +1,4 @@
-/* Copyright (c) 2020, Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2020-2021, Michael Santos <michael.santos@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -20,5 +20,8 @@
 int restrict_process_init(void) {
   return pledge("stdio tty rpath wpath", NULL);
 }
-int restrict_process_stdio(void) { return pledge("stdio tty", NULL); }
+int restrict_process_stdio(int devicefd) {
+  (void)devicefd;
+  return pledge("stdio tty", NULL);
+}
 #endif
