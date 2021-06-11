@@ -18,9 +18,11 @@
 #include <sys/types.h>
 
 #include <sys/capsicum.h>
+#include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include <errno.h>
@@ -37,6 +39,12 @@ int restrict_process_stdio(int devicefd) {
   cap_rights_t policy_read;
   cap_rights_t policy_write;
   cap_rights_t policy_rw;
+  const unsigned long iocmd[] = {
+      TIOCGETA,
+      TIOCSETA,
+      TIOCSETAW,
+      TIOCGWINSZ,
+  };
 
   /* Disables opening new file descriptors */
   if (setrlimit(RLIMIT_NOFILE, &rl) < 0)
@@ -58,6 +66,9 @@ int restrict_process_stdio(int devicefd) {
 
   /* serial device */
   if (cap_rights_limit(devicefd, &policy_rw) < 0)
+    return -1;
+
+  if (cap_ioctls_limit(devicefd, iocmd, sizeof(iocmd)) < 0)
     return -1;
 
   return cap_enter();
