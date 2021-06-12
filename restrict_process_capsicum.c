@@ -50,6 +50,9 @@ int restrict_process_stdio(int devicefd) {
   if (setrlimit(RLIMIT_NOFILE, &rl) < 0)
     return -1;
 
+  if (cap_enter() != 0)
+    return -1;
+
   (void)cap_rights_init(&policy_read, CAP_READ, CAP_EVENT);
   (void)cap_rights_init(&policy_write, CAP_WRITE, CAP_EVENT);
   (void)cap_rights_init(&policy_rw, CAP_READ, CAP_EVENT, CAP_WRITE, CAP_FSTAT,
@@ -71,6 +74,6 @@ int restrict_process_stdio(int devicefd) {
   if (cap_ioctls_limit(devicefd, iocmd, sizeof(iocmd)) < 0)
     return -1;
 
-  return cap_enter();
+  return 0;
 }
 #endif
