@@ -74,6 +74,9 @@ int restrict_process_stdio(int devicefd) {
   if (cap_ioctls_limit(devicefd, iocmd, sizeof(iocmd)) < 0)
     return -1;
 
+  if (cap_fcntls_limit(devicefd, CAP_FCNTL_GETFL | CAP_FCNTL_SETFL) < 0)
+    return -1;
+
   return 0;
 }
 #endif
