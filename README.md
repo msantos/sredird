@@ -6,20 +6,20 @@ sredird *option* *loglevel* *device* [*pollinginterval*]
 
 sredird is:
 
-* a [RFC 2217](https://datatracker.ietf.org/doc/html/rfc2217) compliant
+* an [RFC 2217](https://datatracker.ietf.org/doc/html/rfc2217) compliant
   serial port redirector
 
-* maps a network port to a serial device: serial port parameters can be
-  changed by using an extension to the telnet protocol
+* maps a network port to a serial device: serial port parameters are
+  configured using an extension to the telnet protocol
 
 * runs under a [UCSPI](http://cr.yp.to/proto/ucspi.txt) or other inetd
-  style services such as systemd for process level isolation
+  style service such as systemd for process level isolation
 
-* can restrict process operations using `seccomp(2)`, `pledge(2)`,
+* restricts process operations using `seccomp(2)`, `pledge(2)`,
   `capsicum(4)` or `setrlimit(2)`
 
-sredird can be used for setting up a minimal serial console server on
-a device like a raspberry pi zero w.
+sredird can be used as a minimal serial console server on a device like
+a raspberry pi zero w.
 
 A [picocom](https://github.com/npat-efault/picocom/tree/rfc2217) branch
 supports RFC 2217.
@@ -30,22 +30,21 @@ taken from Ubuntu 16.04 (there does not seem to be a canonical source
 repository for this project). sredird 2.2.1-1.1 is the last C version:
 later versions of sredird (2.2.1-2) switched to C++.
 
-# SETUP
+# EXAMPLES
 
-apt install daemontools ucspi-unix
+```
+apt install daemontools
+```
 
-[closefrom](https://github.com/msantos/closefrom)
-[hexlog](https://github.com/msantos/hexlog)
-[tscat](https://github.com/msantos/tscat)
-
-[ucspi-unix](https://github.com/bruceg/ucspi-unix/pull/2)
+* [unixexec](https://github.com/msantos/unixexec)
+* [hexlog](https://github.com/msantos/hexlog)
+* [tscat](https://github.com/msantos/tscat)
 
 Here is my setup:
 
-    * raspberry pi zero w acting as a console server for other raspberry pi's
-    * example of setup using unixserver
-    * mention vulnerability in unixserver, usage of closefrom
-    * show example xmppbot
+* raspberry pi zero w acting as a console server for other raspberry pi's
+* example of setup using unixexec
+* TODO: show example xmppbot
 
 ~~~ /etc/udev/rules.d/10-usb-serial.rules
 SUBSYSTEM=="tty", ATTRS{idProduct}=="6001", ATTRS{idVendor}=="0403", ATTRS{serial}=="FTG9GBNY", SYMLINK+="console@getpid"
@@ -54,7 +53,11 @@ SUBSYSTEM=="tty", ATTRS{idProduct}=="2303", ATTRS{idVendor}=="067b", ATTRS{versi
 SUBSYSTEM=="tty", ATTRS{idProduct}=="2303", ATTRS{idVendor}=="067b", ATTRS{version}==" 2.00", SYMLINK+="console@sigquit"
 ~~~
 
-~~~ service/console@getpid
+## service run
+
+* service/console@getpid/run
+
+~~~
 #!/bin/bash
 
 umask 077
@@ -62,14 +65,25 @@ umask 077
 mkdir -p /tmp/sredird
 
 exec 2>&1
-exec unixserver -m 077 -c 1 /tmp/sredird/console@getpid -- \
+exec unixexec /tmp/sredird/console@getpid \
   hexlog none \
-  closefrom 3 \
-  softlimit -o 4 -f 0 -d $((4 * 1024 * 1024)) \
   sredird -t 900 5 /dev/console@getpid
 ~~~
 
-# EXAMPLES
+## service run log
+
+* service/console@getpid/log/run
+
+~~~
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SERVICE="$(basename $(dirname $PWD))"
+exec tscat -o 2 "$SERVICE"
+~~~
 
 # USAGE
 
