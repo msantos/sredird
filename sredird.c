@@ -545,7 +545,7 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   struct termios PortSettings;
   int MLines;
 
-  /* Gets the basic informations from the port */
+  /* Gets the basic information from the port */
   if (tcgetattr(PortFd, &PortSettings) < 0)
     err(EXIT_FAILURE, "tcgetattr");
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0)

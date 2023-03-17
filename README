@@ -38,7 +38,7 @@ To contact the authors:
 
 Sredird is a serial port redirector that is compliant with the RFC 2217
 "Telnet Com Port Control Option" protocol. This protocol lets you share
-a serial port through the network. RFC 2217 was orginally implemented
+a serial port through the network. RFC 2217 was originally implemented
 in Cisco Terminal Servers in IOS version 11.x.
 
 RFC 2217 clients include:
@@ -109,7 +109,7 @@ must match for correct interlocking with other programs. The tcpd program
 is the usual tcp wrapper that's not needed for correct operation but
 is useful for security purposes. Don't forget to send a SIGHUP to the
 inetd daemon in order to force reload of the configuration file. The
-initial -i paramater is optional and enables compatibility with the
+initial -i parameter is optional and enables compatibility with the
 Cisco IOS.
 
 6 - Bugs
@@ -144,7 +144,7 @@ used options are missing:
    operating system.
 
  . Use of polling to notify change on the serial control lines is not
-   desireable.  Anyone know of an event driven mechanism for discovering
+   desirable.  Anyone know of an event driven mechanism for discovering
    modem and line signal changes?
 
  . Better documentation and a man page would be useful.
@@ -259,7 +259,7 @@ and web references everywere.
 14 January 2002 - Version 2.0.0, fixes the following bugs:
 
  . Cisco IOS returns 0 to the client when INBOUND flow control is SET but
-   not supported seperately from OUTBOUND.
+   not supported separately from OUTBOUND.
   
  . Telnet negotiations are used alter the states of both the client
    and the server.  sredird did not implement a Telnet state machine
@@ -302,7 +302,7 @@ and web references everywere.
 
  . Applied the patch supplied by Russell Coker
 
-20 Februray 2004 - Version 2.2.1
+20 February 2004 - Version 2.2.1
 
  . Minor bug correction, reported by Peter Astrand
 
