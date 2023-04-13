@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2021, Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2020-2023, Michael Santos <michael.santos@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -29,6 +29,10 @@
 
 int restrict_process_init(void) {
   struct rlimit rl = {0};
+
+  /* Disable writing to the filesystem */
+  if (setrlimit(RLIMIT_FSIZE, &rl) < 0)
+    return -1;
 
   /* Disable forking */
   return setrlimit(RLIMIT_NPROC, &rl);
