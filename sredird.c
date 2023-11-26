@@ -1513,7 +1513,9 @@ int main(int argc, char *argv[]) {
   int SockParmEnable = 1;
 
   /* Generic socket parameter */
+#ifdef SOL_IP
   int SockParm;
+#endif
 
   /* Optional argument processing indexes */
   int ch;
@@ -1644,7 +1646,9 @@ int main(int argc, char *argv[]) {
    * doesn't check if anything fails because failure doesn't prevent
    * correct functioning but only provides slightly worse behaviour
    */
+#ifdef SOL_IP
   SockParm = IPTOS_LOWDELAY;
+#endif
   setsockopt(STDIN_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParmEnable,
              sizeof(SockParmEnable));
 #ifdef SOL_IP
