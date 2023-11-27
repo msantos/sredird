@@ -50,6 +50,8 @@ int restrict_process_stdio(int devicefd) {
       TIOCGWINSZ,
   };
 
+  closefrom(devicefd + 1);
+
   /* Disables opening new file descriptors */
   if (setrlimit(RLIMIT_NOFILE, &rl) < 0)
     return -1;
