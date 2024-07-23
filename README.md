@@ -46,18 +46,20 @@ Here is my setup:
 * example of setup using unixexec
 * TODO: show example xmppbot
 
-~~~ /etc/udev/rules.d/10-usb-serial.rules
+## /etc/udev/rules.d/10-usb-serial.rules
+
+```
 SUBSYSTEM=="tty", ATTRS{idProduct}=="6001", ATTRS{idVendor}=="0403", ATTRS{serial}=="FTG9GBNY", SYMLINK+="console@getpid"
 SUBSYSTEM=="tty", ATTRS{idProduct}=="2008", ATTRS{idVendor}=="0557", SYMLINK+="console@switch"
 SUBSYSTEM=="tty", ATTRS{idProduct}=="2303", ATTRS{idVendor}=="067b", ATTRS{version}==" 1.10", SYMLINK+="console@getsid"
 SUBSYSTEM=="tty", ATTRS{idProduct}=="2303", ATTRS{idVendor}=="067b", ATTRS{version}==" 2.00", SYMLINK+="console@sigquit"
-~~~
+```
 
 ## service run
 
 * service/console@getpid/run
 
-~~~
+```
 #!/bin/bash
 
 umask 077
@@ -68,13 +70,13 @@ exec 2>&1
 exec unixexec /tmp/sredird/console@getpid \
   hexlog none \
   sredird -t 900 5 /dev/console@getpid
-~~~
+```
 
 ## service run log
 
 * service/console@getpid/log/run
 
-~~~
+```
 #!/bin/bash
 
 set -o errexit
@@ -83,7 +85,7 @@ set -o pipefail
 
 SERVICE="$(basename $(dirname $PWD))"
 exec tscat -o 2 "$SERVICE"
-~~~
+```
 
 # USAGE
 
@@ -106,29 +108,31 @@ pollinginterval
 
 # BUILDING
 
-    make
+```
+make
 
-    # selecting process restrictions
-    RESTRICT_PROCESS=seccomp make clean all
+# selecting process restrictions
+RESTRICT_PROCESS=seccomp make clean all
 
-    # rlimit
-    RESTRICT_PROCESS=rlimit make clean all
+# rlimit
+RESTRICT_PROCESS=rlimit make clean all
 
-    # disable process restrictions
-    RESTRICT_PROCESS=null make clean all
+# disable process restrictions
+RESTRICT_PROCESS=null make clean all
 
-    #### using musl
-    # sudo apt install musl-dev musl-tools
+#### using musl
+# sudo apt install musl-dev musl-tools
 
-    RESTRICT_PROCESS=rlimit ./musl-make clean all
+RESTRICT_PROCESS=rlimit ./musl-make clean all
 
-    ## linux seccomp sandbox: requires kernel headers
+## linux seccomp sandbox: requires kernel headers
 
-    # clone the kernel headers somewhere
-    cd /path/to/dir
-    git clone https://github.com/sabotage-linux/kernel-headers.git
+# clone the kernel headers somewhere
+cd /path/to/dir
+git clone https://github.com/sabotage-linux/kernel-headers.git
 
-    # then compile
-    MUSL_INCLUDE=/path/to/dir ./musl-make clean all
+# then compile
+MUSL_INCLUDE=/path/to/dir ./musl-make clean all
+```
 
 # ALTERNATIVES
