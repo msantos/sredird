@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2021, Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2020-2024, Michael Santos <michael.santos@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,26 +26,16 @@ int restrict_process_init(void) {
     return -1;
 
   /* Disable writing to the filesystem */
-  if (setrlimit(RLIMIT_FSIZE, &rl) < 0)
-    return -1;
+  return setrlimit(RLIMIT_FSIZE, &rl);
+}
 
-#ifdef RESTRICT_PROCESS_RLIMIT_NOFILE
-  /* Limit to stdin, stdout, stderr and serial device
-   * Note: disabled by default because a process may inherit file
-   * descriptors from the parent or through the use of LD_PRELOAD
-   *
-   * Use softlimit: softlimit -o 4 ...
-   */
-  rl.rlim_cur = 4;
-  rl.rlim_max = 4;
+int restrict_process_stdio(int devicefd) {
+  struct rlimit rl = {0};
+
+  /* Limit to stdin, stdout, stderr and serial device. */
+  rl.rlim_cur = devicefd + 1;
+  rl.rlim_max = devicefd + 1;
 
   return setrlimit(RLIMIT_NOFILE, &rl);
-#else
-  return 0;
-#endif
-}
-int restrict_process_stdio(int devicefd) {
-  (void)devicefd;
-  return 0;
 }
 #endif
