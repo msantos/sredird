@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2021, Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2020-2024, Michael Santos <michael.santos@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,6 +16,7 @@
 
 #ifdef RESTRICT_PROCESS_null
 int restrict_process_init(void) { return 0; }
+
 int restrict_process_stdio(int devicefd) {
   (void)devicefd;
   return 0;
