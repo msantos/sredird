@@ -126,13 +126,9 @@ RESTRICT_PROCESS=null make clean all
 RESTRICT_PROCESS=rlimit ./musl-make clean all
 
 ## linux seccomp sandbox: requires kernel headers
-
-# clone the kernel headers somewhere
-cd /path/to/dir
-git clone https://github.com/sabotage-linux/kernel-headers.git
-
-# then compile
-MUSL_INCLUDE=/path/to/dir ./musl-make clean all
+export MUSL_INCLUDE=/tmp
+git clone https://github.com/sabotage-linux/kernel-headers.git $MUSL_INCLUDE/kernel-headers
+./musl-make clean all
 ```
 
 # ALTERNATIVES
