@@ -39,6 +39,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <syslog.h>
+#include <inttypes.h>
+#include <stdint.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -228,7 +230,7 @@ static noreturn void SignalFunction(int unused);
 static noreturn void BreakFunction(int unused);
 
 /* Retrieves the port speed from PortFd */
-unsigned long int GetPortSpeed(int PortFd);
+uint32_t GetPortSpeed(int PortFd);
 
 /* Retrieves the data size from PortFd */
 unsigned char GetPortDataSize(int PortFd);
@@ -259,7 +261,7 @@ void SetPortStopSize(int PortFd, unsigned char StopSize);
 void SetPortFlowControl(int PortFd, unsigned char How);
 
 /* Set the serial port speed */
-void SetPortSpeed(int PortFd, unsigned long BaudRate);
+void SetPortSpeed(int PortFd, uint32_t BaudRate);
 
 /* Send the signature Sig to the client */
 void SendSignature(BufferType *B, char *Sig);
@@ -278,7 +280,7 @@ void SendTelnetOption(BufferType *B, unsigned char Command, char Option);
 void SendStr(BufferType *B, char *Str);
 
 /* Send the baud rate BR to SockFd */
-void SendBaudRate(BufferType *B, unsigned long int BR);
+void SendBaudRate(BufferType *B, uint32_t BR);
 
 /* Send the flow control command Command */
 void SendCPCFlowCommand(BufferType *B, unsigned char Command);
@@ -432,7 +434,7 @@ static noreturn void BreakFunction(int unused) {
 }
 
 /* Retrieves the port speed from PortFd */
-unsigned long int GetPortSpeed(int PortFd) {
+uint32_t GetPortSpeed(int PortFd) {
   struct termios PortSettings;
   speed_t Speed;
 
@@ -442,47 +444,47 @@ unsigned long int GetPortSpeed(int PortFd) {
 
   switch (Speed) {
   case B50:
-    return 50UL;
+    return 50U;
   case B75:
-    return 75UL;
+    return 75U;
   case B110:
-    return 110UL;
+    return 110U;
   case B134:
-    return 134UL;
+    return 134U;
   case B150:
-    return 150UL;
+    return 150U;
   case B200:
-    return 200UL;
+    return 200U;
   case B300:
-    return 300UL;
+    return 300U;
   case B600:
-    return 600UL;
+    return 600U;
   case B1200:
-    return 1200UL;
+    return 1200U;
   case B1800:
-    return 1800UL;
+    return 1800U;
   case B2400:
-    return 2400UL;
+    return 2400U;
   case B4800:
-    return 4800UL;
+    return 4800U;
   case B9600:
-    return 9600UL;
+    return 9600U;
   case B19200:
-    return 19200UL;
+    return 19200U;
   case B38400:
-    return 38400UL;
+    return 38400U;
   case B57600:
-    return 57600UL;
+    return 57600U;
   case B115200:
-    return 115200UL;
+    return 115200U;
   case B230400:
-    return 230400UL;
+    return 230400U;
 #ifdef B460800
   case B460800:
-    return 460800UL;
+    return 460800U;
 #endif
   default:
-    return 0UL;
+    return 0U;
   }
 }
 
@@ -792,67 +794,67 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
 }
 
 /* Set the serial port speed */
-void SetPortSpeed(int PortFd, unsigned long BaudRate) {
+void SetPortSpeed(int PortFd, uint32_t BaudRate) {
   struct termios PortSettings;
   speed_t Speed;
 
   switch (BaudRate) {
-  case 50UL:
+  case 50U:
     Speed = B50;
     break;
-  case 75UL:
+  case 75U:
     Speed = B75;
     break;
-  case 110UL:
+  case 110U:
     Speed = B110;
     break;
-  case 134UL:
+  case 134U:
     Speed = B134;
     break;
-  case 150UL:
+  case 150U:
     Speed = B150;
     break;
-  case 200UL:
+  case 200U:
     Speed = B200;
     break;
-  case 300UL:
+  case 300U:
     Speed = B300;
     break;
-  case 600UL:
+  case 600U:
     Speed = B600;
     break;
-  case 1200UL:
+  case 1200U:
     Speed = B1200;
     break;
-  case 1800UL:
+  case 1800U:
     Speed = B1800;
     break;
-  case 2400UL:
+  case 2400U:
     Speed = B2400;
     break;
-  case 4800UL:
+  case 4800U:
     Speed = B4800;
     break;
-  case 9600UL:
+  case 9600U:
     Speed = B9600;
     break;
-  case 19200UL:
+  case 19200U:
     Speed = B19200;
     break;
-  case 38400UL:
+  case 38400U:
     Speed = B38400;
     break;
-  case 57600UL:
+  case 57600U:
     Speed = B57600;
     break;
-  case 115200UL:
+  case 115200U:
     Speed = B115200;
     break;
-  case 230400UL:
+  case 230400U:
     Speed = B230400;
     break;
 #ifdef B460800
-  case 460800UL:
+  case 460800U:
     Speed = B460800;
     break;
 #endif
@@ -1056,9 +1058,9 @@ void SendStr(BufferType *B, char *Str) {
 }
 
 /* Send the baud rate BR to Buffer */
-void SendBaudRate(BufferType *B, unsigned long int BR) {
+void SendBaudRate(BufferType *B, uint32_t BR) {
   unsigned char *p;
-  unsigned long int NBR;
+  uint32_t NBR;
   int i;
 
   NBR = htonl(BR);
@@ -1105,7 +1107,7 @@ void SendCPCByteCommand(BufferType *B, unsigned char Command,
 void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
                       size_t CSize) {
   char SigStr[TmpStrLen] = {0};
-  unsigned long int BaudRate;
+  uint32_t BaudRate;
   unsigned char DataSize;
   unsigned char Parity;
   unsigned char StopSize;
@@ -1131,21 +1133,22 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
   /* Set serial baud rate */
   case TNCAS_SET_BAUDRATE:
     /* Retrieve the baud rate which is in network order */
-    BaudRate = ntohl(*((unsigned long int *)&Command[4]));
+    (void)memcpy(&BaudRate, &Command[4], sizeof(BaudRate));
+    BaudRate = ntohl(BaudRate);
 
     if (BaudRate == 0)
       /* Client is asking for current baud rate */
       LogMsg(LOG_DEBUG, "Baud rate notification received.");
     else {
       /* Change the baud rate */
-      LogMsg(LOG_DEBUG, "Port baud rate change to %lu requested.", BaudRate);
+      LogMsg(LOG_DEBUG, "Port baud rate change to %" PRIu32 " requested.", BaudRate);
       SetPortSpeed(PortFd, BaudRate);
     }
 
     /* Send confirmation */
     BaudRate = GetPortSpeed(PortFd);
     SendBaudRate(SockB, BaudRate);
-    LogMsg(LOG_DEBUG, "Port baud rate: %lu", BaudRate);
+    LogMsg(LOG_DEBUG, "Port baud rate: %" PRIu32, BaudRate);
     break;
 
   /* Set serial data size */
