@@ -8,13 +8,10 @@ sredird is:
 
 * an [RFC 2217](https://datatracker.ietf.org/doc/html/rfc2217) compliant
   serial port redirector
-
 * maps a network port to a serial device: serial port parameters are
   configured using an extension to the telnet protocol
-
 * runs under a [UCSPI](http://cr.yp.to/proto/ucspi.txt) or other inetd
   style service such as systemd for process level isolation
-
 * restricts process operations using `seccomp(2)`, `pledge(2)`,
   `capsicum(4)` or `setrlimit(2)`
 
@@ -59,7 +56,7 @@ SUBSYSTEM=="tty", ATTRS{idProduct}=="2303", ATTRS{idVendor}=="067b", ATTRS{versi
 
 * service/console@getpid/run
 
-```
+```bash
 #!/bin/bash
 
 umask 077
@@ -76,7 +73,7 @@ exec unixexec /tmp/sredird/console@getpid \
 
 * service/console@getpid/log/run
 
-```
+```bash
 #!/bin/bash
 
 set -o errexit
@@ -108,7 +105,7 @@ pollinginterval
 
 # BUILDING
 
-```
+```bash
 make
 
 # selecting process restrictions
