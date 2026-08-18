@@ -545,13 +545,20 @@ unsigned char GetPortStopSize(int PortFd) {
 from PortFd */
 unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
   struct termios PortSettings;
-  int MLines;
+  int MLines = 0;
 
   /* Gets the basic information from the port */
   if (tcgetattr(PortFd, &PortSettings) < 0)
     err(EXIT_FAILURE, "tcgetattr");
-  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
-    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
+    switch (errno) {
+      case ENOTTY:
+      case EINVAL:
+        break;
+      default:
+        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    }
+  }
 
   /* Check which kind of information is requested */
   switch (Which) {
@@ -603,8 +610,15 @@ unsigned char GetModemState(int PortFd, unsigned char PMState) {
   int MLines;
   unsigned char MState = 0;
 
-  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
-    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
+    switch (errno) {
+      case ENOTTY:
+      case EINVAL:
+        return 0;
+      default:
+        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    }
+  }
 
   if ((MLines & TIOCM_CAR) != 0)
     MState += 128;
@@ -716,13 +730,20 @@ void SetPortStopSize(int PortFd, unsigned char StopSize) {
 /* Set the port flow control and DTR and RTS status */
 void SetPortFlowControl(int PortFd, unsigned char How) {
   struct termios PortSettings;
-  int MLines;
+  int MLines = 0;
 
   /* Gets the base status from the port */
   if (tcgetattr(PortFd, &PortSettings) < 0)
     err(EXIT_FAILURE, "tcgetattr");
-  if (ioctl(PortFd, TIOCMGET, &MLines) < 0)
-    err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+  if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
+    switch (errno) {
+      case ENOTTY:
+      case EINVAL:
+        break;
+      default:
+        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    }
+  }
 
   /* Check which settings to change */
   switch (How) {
@@ -789,8 +810,15 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
 
   if (tcsetattr(PortFd, TCSADRAIN, &PortSettings) < 0)
     err(EXIT_FAILURE, "tcsetattr");
-  if (ioctl(PortFd, TIOCMSET, &MLines) < 0)
-    err(EXIT_FAILURE, "ioctl(TIOCMSET)");
+  if (ioctl(PortFd, TIOCMSET, &MLines) < 0) {
+    switch (errno) {
+      case ENOTTY:
+      case EINVAL:
+        break;
+      default:
+        err(EXIT_FAILURE, "ioctl(TIOCMSET)");
+    }
+  }
 }
 
 /* Set the serial port speed */
