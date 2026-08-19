@@ -19,7 +19,7 @@ sredird can be used as a minimal serial console server on a device like
 a raspberry pi zero w.
 
 A [picocom](https://github.com/npat-efault/picocom/tree/rfc2217) branch
-supports RFC 2217.
+supports RFC 2217 (with the patch below).
 
 This version of sredird is a fork of [sredird
 2.2.1-1.1](https://github.com/msantos/sredird/blob/master/README)
@@ -129,3 +129,54 @@ git clone https://github.com/sabotage-linux/kernel-headers.git $MUSL_INCLUDE/ker
 ```
 
 # ALTERNATIVES
+
+# PICOCOM
+
+To use the [picocom](https://github.com/npat-efault/picocom/tree/rfc2217) branch with RFC 2217 protocol support with sredird, apply the following patch and compile:
+
+```bash
+git clone -b rfc2217 https://github.com/npat-efault/picocom.git
+cd picocom
+patch -p1 < picocom.patch
+make
+```
+
+```patch
+diff --git a/Makefile b/Makefile
+index 75f3fdb..f3c344f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,5 @@
+ 
+-VERSION = 4.0a
++VERSION = 4.0a+0.2.1
+ 
+ #CC ?= gcc
+ CPPFLAGS += -DVERSION_STR=\"$(VERSION)\"
+@@ -46,9 +46,9 @@ linenoise-1.0/linenoise.o : linenoise-1.0/linenoise.c linenoise-1.0/linenoise.h
+ #CPPFLAGS += -DNO_CUSTOM_BAUD
+ 
+ ## Comment these in to enable RFC2217 support
+-#CPPFLAGS += -DUSE_RFC2217
+-#OBJS += tn2217.o
+-#tn2217.o : tn2217.c tn2217.h tncomport.h fdio.h termint.h term.h
++CPPFLAGS += -DUSE_RFC2217
++OBJS += tn2217.o
++tn2217.o : tn2217.c tn2217.h tncomport.h fdio.h termint.h term.h
+ 
+ ## Comment this IN to remove help strings (saves ~ 4-6 Kb).
+ #CPPFLAGS += -DNO_HELP
+diff --git a/tn2217.c b/tn2217.c
+index d54676a..f02b836 100644
+--- a/tn2217.c
++++ b/tn2217.c
+@@ -129,7 +129,7 @@ struct tn2217_state {
+     struct termios termios;     /* Predicted remote com port geometry */
+     int modem;                  /* Predicted remote com port signals */
+ 
+-    unsigned char cmdbuf[32];   /* IAC command accumulator */
++    unsigned char cmdbuf[255];  /* IAC command accumulator */
+     unsigned char cmdbuflen;
+     unsigned int cmdiac : 1;    /* 1 iff last cmdbuf ch is incomplete IAC */
+ 
+```
