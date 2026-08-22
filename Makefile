@@ -37,5 +37,8 @@ all: $(PROG)
 $(PROG):
 	$(CC) -g $(CFLAGS) $(WFLAGS) -o sredird $(SRC) $(LDFLAGS)
 
+test: all
+	./test/test_rfc2217.sh
+
 clean:
 	rm -f sredird
