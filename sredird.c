@@ -48,7 +48,7 @@
 #include "restrict_process.h"
 
 /* Version id */
-#define VersionId "2.2.1"
+#define VersionId "2.2.1+1.0.0"
 #define SRedirdVersionId "Version " VersionId ", 20 February 2004"
 
 /* Maximum length of temporary strings */
