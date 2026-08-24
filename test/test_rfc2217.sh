@@ -8,7 +8,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 SREDIRD="${SREDIRD:-$ROOT_DIR/sredird}"
-PICOCOM="${PICOCOM:-$(command -v picocom || echo "/usr/bin/picocom")}"
+PICOCOM="${PICOCOM:-}"
+if [[ -z "$PICOCOM" ]]; then
+    PICOCOM="$(command -v picocom || true)"
+fi
 SOCAT="${SOCAT:-$(command -v socat || echo "socat")}"
 ADDR="${ADDR:-127.0.11.11}"
 PORT="${PORT:-10005}"
@@ -25,14 +28,107 @@ if ! command -v "$SOCAT" >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! command -v "$PICOCOM" >/dev/null 2>&1; then
+install_picocom() {
+    echo "picocom with RFC2217 support not found. Compiling, patching and installing..."
+    local build_dir
+    build_dir="$(mktemp -d /tmp/picocom_build.XXXXXX)"
+    
+    (
+        set -euo pipefail
+        trap 'rm -rf "$build_dir"' EXIT
+        
+        git clone -b rfc2217 https://github.com/npat-efault/picocom.git "$build_dir/picocom"
+        
+        cat << 'EOF' > "$build_dir/picocom.patch"
+diff --git a/Makefile b/Makefile
+index 75f3fdb..f3c344f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,5 @@
+ 
+-VERSION = 4.0a
++VERSION = 4.0a+0.2.1
+ 
+ #CC ?= gcc
+ CPPFLAGS += -DVERSION_STR=\"$(VERSION)\"
+@@ -46,9 +46,9 @@ linenoise-1.0/linenoise.o : linenoise-1.0/linenoise.c linenoise-1.0/linenoise.h
+ #CPPFLAGS += -DNO_CUSTOM_BAUD
+ 
+ ## Comment these in to enable RFC2217 support
+-#CPPFLAGS += -DUSE_RFC2217
+-#OBJS += tn2217.o
+-#tn2217.o : tn2217.c tn2217.h tncomport.h fdio.h termint.h term.h
++CPPFLAGS += -DUSE_RFC2217
++OBJS += tn2217.o
++tn2217.o : tn2217.c tn2217.h tncomport.h fdio.h termint.h term.h
+ 
+ ## Comment this IN to remove help strings (saves ~ 4-6 Kb).
+ #CPPFLAGS += -DNO_HELP
+diff --git a/tn2217.c b/tn2217.c
+index d54676a..f02b836 100644
+--- a/tn2217.c
++++ b/tn2217.c
+@@ -129,7 +129,7 @@ struct tn2217_state {
+     struct termios termios;     /* Predicted remote com port geometry */
+     int modem;                  /* Predicted remote com port signals */
+ 
+-    unsigned char cmdbuf[32];   /* IAC command accumulator */
++    unsigned char cmdbuf[255];  /* IAC command accumulator */
+     unsigned char cmdbuflen;
+     unsigned int cmdiac : 1;    /* 1 iff last cmdbuf ch is incomplete IAC */
+EOF
+
+        cd "$build_dir/picocom"
+        patch -p1 < "../picocom.patch"
+        make
+        
+        local install_dir=""
+        if [[ -w "/usr/local/bin" ]]; then
+            install_dir="/usr/local/bin"
+        elif [[ -d "$HOME/.local/bin" && -w "$HOME/.local/bin" ]]; then
+            install_dir="$HOME/.local/bin"
+        elif mkdir -p "$HOME/.local/bin" 2>/dev/null && [[ -w "$HOME/.local/bin" ]]; then
+            install_dir="$HOME/.local/bin"
+        elif [[ -d "$HOME/bin" && -w "$HOME/bin" ]]; then
+            install_dir="$HOME/bin"
+        elif mkdir -p "$HOME/bin" 2>/dev/null && [[ -w "$HOME/bin" ]]; then
+            install_dir="$HOME/bin"
+        else
+            install_dir="$ROOT_DIR"
+        fi
+        
+        echo "Installing picocom to $install_dir..."
+        cp picocom "$install_dir/picocom"
+        chmod +x "$install_dir/picocom"
+    )
+    
+    if [[ -x "/usr/local/bin/picocom" ]] && "/usr/local/bin/picocom" --help 2>&1 | grep -qi "USE_RFC2217"; then
+        PICOCOM="/usr/local/bin/picocom"
+    elif [[ -x "$HOME/.local/bin/picocom" ]] && "$HOME/.local/bin/picocom" --help 2>&1 | grep -qi "USE_RFC2217"; then
+        PICOCOM="$HOME/.local/bin/picocom"
+    elif [[ -x "$HOME/bin/picocom" ]] && "$HOME/bin/picocom" --help 2>&1 | grep -qi "USE_RFC2217"; then
+        PICOCOM="$HOME/bin/picocom"
+    elif [[ -x "$ROOT_DIR/picocom" ]] && "$ROOT_DIR/picocom" --help 2>&1 | grep -qi "USE_RFC2217"; then
+        PICOCOM="$ROOT_DIR/picocom"
+    else
+        echo "ERROR: Failed to find or run installed picocom with RFC2217 support." >&2
+        return 1
+    fi
+}
+
+# Verify picocom is available and supports RFC 2217, if not compile and install it
+if [[ -z "$PICOCOM" ]] || [[ ! -x "$PICOCOM" ]] || ! "$PICOCOM" --help 2>&1 | grep -qi "USE_RFC2217"; then
+    install_picocom
+fi
+
+if [[ -z "$PICOCOM" ]] || [[ ! -x "$PICOCOM" ]]; then
     echo "ERROR: picocom is required but not installed." >&2
     exit 1
 fi
 
-# Verify picocom supports RFC 2217
 if ! "$PICOCOM" --help 2>&1 | grep -qi "USE_RFC2217"; then
-    echo "WARNING: picocom might not have RFC 2217 support compiled in." >&2
+    echo "ERROR: picocom does not have RFC 2217 support." >&2
+    exit 1
 fi
 
 TMPDIR="$(mktemp -d /tmp/sredird_test.XXXXXX)"
