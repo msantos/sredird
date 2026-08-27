@@ -1599,6 +1599,9 @@ int main(int argc, char *argv[]) {
   poll_timeout = ModemStatePolling;
   if (argc > 2) {
     poll_timeout = atoi(argv[2]);
+    if (poll_timeout == 0) {
+      poll_timeout = -1;
+    }
   }
 
   /* Logs sredird start */
