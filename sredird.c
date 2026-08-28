@@ -1736,7 +1736,10 @@ int main(int argc, char *argv[]) {
 
   /* Main loop with fd's control */
   for (;;) {
-    if (poll(fds, COUNT(fds), poll_timeout) < 0) {
+    int rv;
+
+    rv = poll(fds, COUNT(fds), poll_timeout);
+    if (rv < 0) {
       if (errno == EINTR)
         continue;
       err(EXIT_FAILURE, "poll");
@@ -1862,8 +1865,9 @@ int main(int argc, char *argv[]) {
       RemoteFlowOff = False;
     }
 
-    /* Check the port state and notify the client if it's changed */
-    if (TCPCEnabled == True && InputFlow == True) {
+    /* Check the port state and notify the client if it's changed.
+     * Check after poll timeout to avoid system call overhead during activity. */
+    if (rv == 0 && TCPCEnabled == True && InputFlow == True) {
       if ((GetModemState(DeviceFd, ModemState) & ModemStateMask &
            ModemStateECMask) !=
           (ModemState & ModemStateMask & ModemStateECMask)) {
