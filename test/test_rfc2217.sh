@@ -169,6 +169,7 @@ echo ""
 
 # Start PTY pair
 "$SOCAT" -lf "$TMPDIR/socat_pty.log" pty,raw,echo=0,link="$DEV" pty,raw,echo=0,link="$PEER" &
+SOCAT_PTY_PID=$!
 
 # Wait for PTY symlinks to exist
 for _ in {1..30}; do
@@ -185,6 +186,7 @@ fi
 
 # Start TCP listener wrapping sredird with poll interval 0
 "$SOCAT" -lf "$LOG_SREDIRD" TCP-LISTEN:"$PORT",bind="$ADDR",reuseaddr,fork EXEC:"$SREDIRD 7 $DEV 0",stderr &
+SOCAT_TCP_PID=$!
 sleep 0.5
 
 # Test 1: Bidirectional Data Transfer at 115200 baud
@@ -234,6 +236,9 @@ for BAUD in "${BAUD_LIST[@]}"; do
 	fi
 	echo "PASS"
 done
+
+kill "$SOCAT_PTY_PID" 2>/dev/null || true
+kill "$SOCAT_TCP_PID" 2>/dev/null || true
 
 echo ""
 echo "All RFC 2217 tests PASSED successfully."
