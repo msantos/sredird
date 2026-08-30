@@ -26,12 +26,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdnoreturn.h>
@@ -39,8 +41,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <syslog.h>
-#include <inttypes.h>
-#include <stdint.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -552,11 +552,11 @@ unsigned char GetPortFlowControl(int PortFd, unsigned char Which) {
     err(EXIT_FAILURE, "tcgetattr");
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
     switch (errno) {
-      case ENOTTY:
-      case EINVAL:
-        break;
-      default:
-        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    case ENOTTY:
+    case EINVAL:
+      break;
+    default:
+      err(EXIT_FAILURE, "ioctl(TIOCMGET)");
     }
   }
 
@@ -612,11 +612,11 @@ unsigned char GetModemState(int PortFd, unsigned char PMState) {
 
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
     switch (errno) {
-      case ENOTTY:
-      case EINVAL:
-        return 0;
-      default:
-        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    case ENOTTY:
+    case EINVAL:
+      return 0;
+    default:
+      err(EXIT_FAILURE, "ioctl(TIOCMGET)");
     }
   }
 
@@ -737,11 +737,11 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
     err(EXIT_FAILURE, "tcgetattr");
   if (ioctl(PortFd, TIOCMGET, &MLines) < 0) {
     switch (errno) {
-      case ENOTTY:
-      case EINVAL:
-        break;
-      default:
-        err(EXIT_FAILURE, "ioctl(TIOCMGET)");
+    case ENOTTY:
+    case EINVAL:
+      break;
+    default:
+      err(EXIT_FAILURE, "ioctl(TIOCMGET)");
     }
   }
 
@@ -812,11 +812,11 @@ void SetPortFlowControl(int PortFd, unsigned char How) {
     err(EXIT_FAILURE, "tcsetattr");
   if (ioctl(PortFd, TIOCMSET, &MLines) < 0) {
     switch (errno) {
-      case ENOTTY:
-      case EINVAL:
-        break;
-      default:
-        err(EXIT_FAILURE, "ioctl(TIOCMSET)");
+    case ENOTTY:
+    case EINVAL:
+      break;
+    default:
+      err(EXIT_FAILURE, "ioctl(TIOCMSET)");
     }
   }
 }
@@ -1169,7 +1169,8 @@ void HandleCPCCommand(BufferType *SockB, int PortFd, unsigned char *Command,
       LogMsg(LOG_DEBUG, "Baud rate notification received.");
     else {
       /* Change the baud rate */
-      LogMsg(LOG_DEBUG, "Port baud rate change to %" PRIu32 " requested.", BaudRate);
+      LogMsg(LOG_DEBUG, "Port baud rate change to %" PRIu32 " requested.",
+             BaudRate);
       SetPortSpeed(PortFd, BaudRate);
     }
 
@@ -1866,7 +1867,8 @@ int main(int argc, char *argv[]) {
     }
 
     /* Check the port state and notify the client if it's changed.
-     * Check after poll timeout to avoid system call overhead during activity. */
+     * Check after poll timeout to avoid system call overhead during activity.
+     */
     if (rv == 0 && TCPCEnabled == True && InputFlow == True) {
       if ((GetModemState(DeviceFd, ModemState) & ModemStateMask &
            ModemStateECMask) !=
