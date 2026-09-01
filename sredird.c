@@ -1855,7 +1855,8 @@ int main(int argc, char *argv[]) {
     }
 
     if ((fds[STDIN_FILENO].revents & POLLHUP) ||
-        (fds[DEVICE_FILENO].revents & POLLHUP)) {
+        (fds[DEVICE_FILENO].revents & POLLHUP) ||
+        (fds[STDOUT_FILENO].revents & (POLLHUP | POLLERR))) {
       return EXIT_SUCCESS;
     }
 
