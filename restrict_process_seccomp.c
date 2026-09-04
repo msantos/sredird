@@ -73,7 +73,7 @@
 #define SECCOMP_AUDIT_ARCH 0
 #endif
 
-int restrict_process_init() {
+int restrict_process_init(void) {
   struct sock_filter filter[] = {
       /* Ensure the syscall arch convention is as expected. */
       BPF_STMT(BPF_LD + BPF_W + BPF_ABS, offsetof(struct seccomp_data, arch)),
