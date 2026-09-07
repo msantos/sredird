@@ -285,9 +285,9 @@ void SendBaudRate(BufferType *B, uint32_t BR);
 /* Send the flow control command Command */
 void SendCPCFlowCommand(BufferType *B, unsigned char Command);
 
-/* Send the CPC command Command using Parm as parameter */
+/* Send the CPC command Command using Param as parameter */
 void SendCPCByteCommand(BufferType *B, unsigned char Command,
-                        unsigned char Parm);
+                        unsigned char Param);
 
 /* Handling of COM Port Control specific commands */
 void HandleCPCCommand(BufferType *B, int PortFd, unsigned char *Command,
@@ -1119,14 +1119,14 @@ void SendCPCFlowCommand(BufferType *B, unsigned char Command) {
     LogMsg(LOG_DEBUG, "Sent flow control resume command.");
 }
 
-/* Send the CPC command Command using Parm as parameter */
+/* Send the CPC command Command using Param as parameter */
 void SendCPCByteCommand(BufferType *B, unsigned char Command,
-                        unsigned char Parm) {
+                        unsigned char Param) {
   AddToBuffer(B, TNIAC);
   AddToBuffer(B, TNSB);
   AddToBuffer(B, TNCOM_PORT_OPTION);
   AddToBuffer(B, Command);
-  EscWriteChar(B, Parm);
+  EscWriteChar(B, Param);
   AddToBuffer(B, TNIAC);
   AddToBuffer(B, TNSE);
 }
@@ -1542,11 +1542,11 @@ int main(int argc, char *argv[]) {
   BufferType ToNetBuf;
 
   /* Socket setup flag */
-  int SockParmEnable = 1;
+  int SockParamEnable = 1;
 
   /* Generic socket parameter */
 #ifdef SOL_IP
-  int SockParm;
+  int SockParam;
 #endif
 
   /* Optional argument processing indexes */
@@ -1682,27 +1682,27 @@ int main(int argc, char *argv[]) {
    * correct functioning but only provides slightly worse behaviour
    */
 #ifdef SOL_IP
-  SockParm = IPTOS_LOWDELAY;
+  SockParam = IPTOS_LOWDELAY;
 #endif
-  setsockopt(STDIN_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParmEnable,
-             sizeof(SockParmEnable));
+  setsockopt(STDIN_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParamEnable,
+             sizeof(SockParamEnable));
 #ifdef SOL_IP
-  setsockopt(STDIN_FILENO, SOL_IP, IP_TOS, &SockParm, sizeof(SockParm));
+  setsockopt(STDIN_FILENO, SOL_IP, IP_TOS, &SockParam, sizeof(SockParam));
 #endif
-  setsockopt(STDIN_FILENO, SOL_SOCKET, SO_OOBINLINE, &SockParmEnable,
-             sizeof(SockParmEnable));
-  setsockopt(STDOUT_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParmEnable,
-             sizeof(SockParmEnable));
+  setsockopt(STDIN_FILENO, SOL_SOCKET, SO_OOBINLINE, &SockParamEnable,
+             sizeof(SockParamEnable));
+  setsockopt(STDOUT_FILENO, SOL_SOCKET, SO_KEEPALIVE, &SockParamEnable,
+             sizeof(SockParamEnable));
 #ifdef SOL_IP
-  setsockopt(STDOUT_FILENO, SOL_IP, IP_TOS, &SockParm, sizeof(SockParm));
+  setsockopt(STDOUT_FILENO, SOL_IP, IP_TOS, &SockParam, sizeof(SockParam));
 #endif
 
   /* Make reads/writes unblocking */
-  if (ioctl(STDOUT_FILENO, FIONBIO, &SockParmEnable) < 0)
+  if (ioctl(STDOUT_FILENO, FIONBIO, &SockParamEnable) < 0)
     err(EXIT_FAILURE, "ioctl(FIONBIO)");
-  if (ioctl(STDIN_FILENO, FIONBIO, &SockParmEnable) < 0)
+  if (ioctl(STDIN_FILENO, FIONBIO, &SockParamEnable) < 0)
     err(EXIT_FAILURE, "ioctl(FIONBIO)");
-  if (ioctl(DeviceFd, FIONBIO, &SockParmEnable) < 0)
+  if (ioctl(DeviceFd, FIONBIO, &SockParamEnable) < 0)
     err(EXIT_FAILURE, "ioctl(FIONBIO)");
 
   /* Send initial Telnet negotiations to the client */
