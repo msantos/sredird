@@ -1087,17 +1087,14 @@ void SendStr(BufferType *B, char *Str) {
 
 /* Send the baud rate BR to Buffer */
 void SendBaudRate(BufferType *B, uint32_t BR) {
-  unsigned char *p;
-  uint32_t NBR;
+  uint32_t NBR = htonl(BR);
+  unsigned char *p = (unsigned char *)&NBR;
   int i;
-
-  NBR = htonl(BR);
 
   AddToBuffer(B, TNIAC);
   AddToBuffer(B, TNSB);
   AddToBuffer(B, TNCOM_PORT_OPTION);
   AddToBuffer(B, TNASC_SET_BAUDRATE);
-  p = (unsigned char *)&NBR;
   for (i = 0; i < (int)sizeof(NBR); i++)
     EscWriteChar(B, p[i]);
   AddToBuffer(B, TNIAC);
