@@ -2,7 +2,12 @@
 #
 # test_rfc2217.sh: End-to-end integration test for sredird using socat and picocom
 #
-set -euo pipefail
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+shopt -s nullglob
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
